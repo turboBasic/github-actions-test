@@ -1,6 +1,6 @@
-# Two calls on purpose. The first takes every default, which is what a new consumer copies out
-# of the README. The second takes the caller-side configuration nothing inside github-actions can
-# exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
+# Scenario: pin the mise release rather than taking whatever mise-action installs today.
+# The default is an empty string, which lets the action choose — fine until it chooses a mise that
+# resolves a tool differently from the one on a developer's machine.
 
 name: CI
 
@@ -21,14 +21,5 @@ jobs:
     uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
     permissions:
       contents: read
-
-  variants:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
-    permissions:
-      contents: read
     with:
-      # prek over changed files instead of the lint task, at the stage this repo reserves its
-      # slow hook for, with the typecheck stage switched off entirely.
-      lint-changed-only: true
-      hook-stage: pre-push
-      run-typecheck: false
+      mise-version: 2026.9.0
