@@ -30,6 +30,18 @@ either job and its steps are skipped.
 Prove it by putting a non-conventional title on this PR: on `main`'s configuration the title check
 fails, and here it stays green.
 
+## Observed, against a ruleset
+
+`commits / PR title` and `commits / Commit messages` are **required status checks** on this repo's
+`main` ruleset. With both inputs `false` their conclusion is `skipped`, and GitHub reports this pull
+request as `mergeStateStatus=CLEAN, mergeable=MERGEABLE`.
+
+So a skipped required check *satisfies* branch protection. This is mergeable with two required gates
+that validated nothing.
+
+The control: `test/scenario-lockfile-drift`, whose `ci / CI` genuinely fails, reports `BLOCKED`. The
+ruleset is enforcing; skipped just counts as passed.
+
 ## Do not merge
 
 `main` keeps both checks on. This branch is a demonstration of what switching them off looks like from
