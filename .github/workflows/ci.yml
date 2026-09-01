@@ -1,6 +1,7 @@
-# Two calls on purpose. The first takes every default, which is what a new consumer copies out
-# of the README. The second takes the caller-side configuration nothing inside github-actions can
-# exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
+# Scenario: a repo with no typecheck and no test mise task, which is opus-magnum's actual shape —
+# its tasks are all make wrappers. Both stages are switched off, so the job runs checkout, uv sync
+# and lint, and nothing else. Leave either input at its default and the job fails looking for a task
+# this repo does not define.
 
 name: CI
 
@@ -21,14 +22,6 @@ jobs:
     uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
     permissions:
       contents: read
-
-  variants:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
-    permissions:
-      contents: read
     with:
-      # prek over changed files instead of the lint task, at the stage this repo reserves its
-      # slow hook for, with the typecheck stage switched off entirely.
-      lint-changed-only: true
-      hook-stage: pre-push
       run-typecheck: false
+      run-tests: false

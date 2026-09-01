@@ -14,14 +14,6 @@ run = ["mise install", "uv sync --locked", "prek install"]
 description = "Lint with ruff"
 run = "uv run ruff check ."
 
-[tasks.typecheck]
-description = "Type-check with pyright"
-run = "uv run pyright"
-
-[tasks.test]
-description = "Run the test suite"
-run = "uv run pytest"
-
 [tasks.ci]
 description = "Run everything CI runs, locally"
-depends = ["lint", "typecheck", "test"]
+depends = ["lint"]
