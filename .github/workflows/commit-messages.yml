@@ -1,0 +1,16 @@
+name: Commit messages
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize] # a corrected title is an edit, not a push
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  commits:
+    uses: turboBasic/github-actions/.github/workflows/conventional-commits.yml@v2
+    permissions:
+      contents: read
+      pull-requests: read

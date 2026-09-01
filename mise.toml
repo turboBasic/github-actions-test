@@ -1,0 +1,27 @@
+[tools]
+prek = "0.5.0"
+python = "3.14"
+uv = "0.12.8"
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.setup]
+description = "Install tools, dependencies and git hooks"
+run = ["mise install", "uv sync --locked", "prek install"]
+
+[tasks.lint]
+description = "Lint with ruff"
+run = "uv run ruff check ."
+
+[tasks.typecheck]
+description = "Type-check with pyright"
+run = "uv run pyright"
+
+[tasks.test]
+description = "Run the test suite"
+run = "uv run pytest"
+
+[tasks.ci]
+description = "Run everything CI runs, locally"
+depends = ["lint", "typecheck", "test"]

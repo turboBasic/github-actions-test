@@ -1,0 +1,32 @@
+# On `opened` only: this rewrites the body, so running it on every push would discard whatever
+# a human typed after the PR went up.
+
+name: PR description
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  describe:
+    name: Populate the PR description
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write # the action patches the PR body
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # commit subjects come from the range; a shallow clone renders an empty body
+          persist-credentials: false
+      - uses: turboBasic/github-actions/actions/populate-pr-description@v2
+        with:
+          github-token: ${{ github.token }}
+          pr-number: ${{ github.event.pull_request.number }}
+          repo: ${{ github.repository }}
+          base-sha: ${{ github.event.pull_request.base.sha }}
+          head-sha: ${{ github.event.pull_request.head.sha }}
