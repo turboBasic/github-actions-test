@@ -1,6 +1,6 @@
-# Two calls on purpose. The first takes every default, which is what a new consumer copies out
-# of the README. The second takes the caller-side configuration nothing inside github-actions can
-# exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
+# Scenario: this repo names its mise tasks check / types / spec, not lint / typecheck / test.
+# The three *-task inputs are what let a consumer keep its own names. Drop them and the job fails
+# looking for a task that does not exist, which is the whole point of testing it.
 
 name: CI
 
@@ -21,14 +21,7 @@ jobs:
     uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
     permissions:
       contents: read
-
-  variants:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
-    permissions:
-      contents: read
     with:
-      # prek over changed files instead of the lint task, at the stage this repo reserves its
-      # slow hook for, with the typecheck stage switched off entirely.
-      lint-changed-only: true
-      hook-stage: pre-push
-      run-typecheck: false
+      lint-task: check
+      typecheck-task: types
+      test-task: spec
