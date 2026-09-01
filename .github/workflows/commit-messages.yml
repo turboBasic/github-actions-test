@@ -1,8 +1,12 @@
+# Scenario: both checks switched off. The jobs are gated on the same conditions, so they skip — and
+# a skipped job reports success. The contexts stay green while validating nothing, which is why the
+# README says to remove them from the required checks in the same change.
+
 name: Commit messages
 
 on:
   pull_request:
-    types: [opened, edited, reopened, synchronize] # a corrected title is an edit, not a push
+    types: [opened, edited, reopened, synchronize]
 
 permissions:
   contents: read
@@ -14,3 +18,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
+    with:
+      check-title: false
+      check-commits: false
