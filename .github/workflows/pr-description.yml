@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0 # commit subjects come from the range; a shallow clone renders an empty body
           persist-credentials: false
-      - uses: turboBasic/github-actions/actions/populate-pr-description@v2
+      - uses: turboBasic/github-actions/actions/populate-pr-description@fix/pr-description-paragraphs
         with:
           github-token: ${{ github.token }}
           pr-number: ${{ github.event.pull_request.number }}
