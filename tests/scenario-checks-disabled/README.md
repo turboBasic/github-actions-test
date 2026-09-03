@@ -39,7 +39,7 @@ request as `mergeStateStatus=CLEAN, mergeable=MERGEABLE`.
 So a skipped required check *satisfies* branch protection. This is mergeable with two required gates
 that validated nothing.
 
-The control: `test/scenario-lockfile-drift`, whose `ci / CI` genuinely fails, reports `BLOCKED`. The
+The control: `test/lockfile-drift`, whose `ci / CI` genuinely fails, reports `BLOCKED`. The
 ruleset is enforcing; skipped just counts as passed.
 
 ## Do not merge

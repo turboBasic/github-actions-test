@@ -15,17 +15,22 @@ whether a call site works. This repository is the caller.
 
 ## Scenario branches
 
-Each branch under `test/scenario-*` exercises one input combination and documents it in
-`tests/scenario-<name>/README.md`. They are not for merging: several change `mise.toml` or a workflow
-in ways `main` must not adopt, and one is meant to stay red.
+Each branch under `test/*` pins one caller-side input combination — the shapes nothing inside
+`github-actions` can exercise itself, because its own self-calls take the defaults. **The branches are
+the artifacts; this table is the index.** A scenario lives on its branch and documents itself in a
+README the table links, mirrored onto `main` so the set reads without checking out five branches, and
+so a scenario cannot be quietly lost by deleting a branch nobody remembered.
+
+None of them is for merging: several change `mise.toml` or a workflow in ways `main` must not adopt,
+and one is meant to stay red.
 
 | Branch | Exercises | Ends |
 | --- | --- | --- |
-| `test/scenario-custom-task-names` | `lint-task`, `typecheck-task`, `test-task` against renamed mise tasks | green |
-| `test/scenario-stages-off` | `run-typecheck: false`, `run-tests: false` with those tasks **deleted** — `opus-magnum`'s shape | green |
-| `test/scenario-mise-version-pin` | `mise-version` forwarded to `jdx/mise-action` | green |
-| `test/scenario-lockfile-drift` | `uv sync --locked` against a version bump with no `uv lock` | **red, on purpose** |
-| `test/scenario-checks-disabled` | `check-title: false`, `check-commits: false` — and what a skipped required check does | green, having checked nothing |
+| [`test/custom-task-names`](tests/scenario-custom-task-names/README.md) | `python-ci.yml`'s `lint-task`, `typecheck-task` and `test-task`, with this repo's mise tasks renamed to `check`, `types` and `spec` | **green.** The override path is never taken upstream, since `github-actions` self-calls with the defaults. Rename a task without wiring the input and the job fails with `task not found`. |
+| [`test/stages-off`](tests/scenario-stages-off/README.md) | `python-ci.yml`'s `run-typecheck: false` and `run-tests: false`, with those tasks **deleted** from `mise.toml` | **green**, running only checkout, `uv sync --locked` and `mise run lint`. Deleting the tasks is what makes it real — passing the inputs in a repo that *has* them proves only that the `if:` works. This is `opus-magnum`'s actual shape. |
+| [`test/mise-version-pin`](tests/scenario-mise-version-pin/README.md) | `python-ci.yml`'s `mise-version`, pinned to `2026.9.0` and forwarded to `jdx/mise-action` | **green**, but **the log line is the assertion**: the mise-action step must report `2026.9.0` rather than the newest release. A green job alone cannot tell a forwarded input from an ignored one. `opus-magnum` is the only real consumer that pins it. |
+| [`test/lockfile-drift`](tests/scenario-lockfile-drift/README.md) | `python-ci.yml`'s `uv sync --locked`, with `[project].version` bumped to `0.2.0` and `uv.lock` left alone | **red, on purpose**, at *Sync dependencies*, before any lint or test runs. The surprising half is that a *version* bump counts as drift when no dependency changed. `github-actions` hit this cutting v2.0.2. Do not fix. |
+| [`test/checks-disabled`](tests/scenario-checks-disabled/README.md) | `conventional-commits.yml`'s `check-title: false` and `check-commits: false` | **green, having checked nothing** — the most dangerous behaviour in the set. Both checks report *success without running*, because GitHub counts a skipped job as passed, and a skipped **required** check satisfies the ruleset, so the branch is `MERGEABLE` with two gates that validated nothing. Drop a check and remove its required context in the same change. |
 
 A green branch proves nothing on its own, so each README names the assertion in the log rather than
 the colour: which `TASK` the step received, which mise version installed, which step failed first.
