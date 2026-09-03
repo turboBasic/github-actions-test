@@ -22,20 +22,22 @@ jobs:
     permissions:
       contents: read
 
-  # The third caller-side shape nothing inside github-actions can exercise: its release is a *called*
-  # workflow now, gated on `needs: [ci]` rather than on a trigger, and that wiring only ever runs on a
-  # push to a default branch. This repo has no tags, so a release here also takes the two branches
-  # github-actions itself will not — an empty "highest release", and creating the major tag with POST
-  # instead of moving it.
+  # The release job that lived here is gone with the branch it called. It rehearsed
+  # turboBasic/github-actions#54 — a release cut by a job with `needs: [ci]` rather than by a trigger —
+  # and produced v0.1.0 and v0, which are the tags this repo now carries. Restore it once that lands,
+  # pinned to `@vN` like every other call here:
   #
-  # Pinned to a branch on purpose, which no other call site here does: this is the version under
-  # review. It goes back to @vN once that lands.
-  release:
-    needs: [ci]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: turboBasic/github-actions/.github/workflows/release.yml@002-commit-driven-releases
-    permissions:
-      contents: write
+  #   release:
+  #     needs: [ci]
+  #     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #     uses: turboBasic/github-actions/.github/workflows/release.yml@vN
+  #     permissions:
+  #       contents: write
+  #
+  # Removed rather than repointed because a reusable-workflow `uses:` is resolved when the run is
+  # created, not when the job starts: a dead ref fails the whole run even though the `if:` would have
+  # skipped the job. `.cliff.toml` and the git-cliff pin stay — they are what that workflow renders
+  # with, and the job needs them back unchanged.
 
   variants:
     uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
