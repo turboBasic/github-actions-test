@@ -2,7 +2,7 @@
 # of the README. The second takes the caller-side configuration nothing inside github-actions can
 # exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
 
-name: CI
+name: ci
 
 on:
   push:
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   ci:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
+    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v3
     permissions:
       contents: read
 
@@ -36,12 +36,12 @@ jobs:
   release:
     needs: [ci]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: turboBasic/github-actions/.github/workflows/release.yml@v2
+    uses: turboBasic/github-actions/.github/workflows/release.yml@v3
     permissions:
       contents: write # creates the version tag, publishes the release, moves the major tag
 
   variants:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v2
+    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v3
     permissions:
       contents: read
     with:
@@ -50,3 +50,4 @@ jobs:
       lint-changed-only: true
       hook-stage: pre-push
       run-typecheck: false
+      cache-prek: true # explicit only to prove the v3 rename resolves: a stale name is a startup failure

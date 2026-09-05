@@ -1,7 +1,7 @@
 # On `opened` only: this rewrites the body, so running it on every push would discard whatever
 # a human typed after the PR went up.
 
-name: PR description
+name: pr-description
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0 # commit subjects come from the range; a shallow clone renders an empty body
           persist-credentials: false
-      - uses: turboBasic/github-actions/actions/populate-pr-description@v2
+      - uses: turboBasic/github-actions/actions/populate-pr-description@v3
         with:
           github-token: ${{ github.token }}
           pr-number: ${{ github.event.pull_request.number }}
