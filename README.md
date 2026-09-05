@@ -1,17 +1,17 @@
 # github-actions-test
 
 Test consumer for [`turboBasic/github-actions`][upstream]. It exists to run those workflows the way a
-real repository runs them, at the `@v2` tag consumers actually pin.
+real repository runs them, at the `@v3` tag consumers actually pin.
 
 Every linter upstream passes on a workflow that no caller can run, so lint there proves nothing about
 whether a call site works. This repository is the caller.
 
 | Call site | What it exercises |
 | --- | --- |
-| `.github/workflows/ci.yml` | `python-ci.yml@v2` twice: once at every default, once with `lint-changed-only`, `hook-stage: pre-push` and `run-typecheck: false` |
-| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v2` — PR title and every commit in the range |
-| `.github/workflows/precommit-advisory.yml` | `precommit-advisory.yml@v2` — the whole tree, non-blocking, as one updated PR comment |
-| `.github/workflows/pr-description.yml` | `actions/populate-pr-description@v2` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range |
+| `.github/workflows/ci.yml` | `python-ci.yml@v3` twice: once at every default, once with `lint-changed-only`, `hook-stage: pre-push`, `run-typecheck: false` and `cache-prek` |
+| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v3` — PR title and every commit in the range |
+| `.github/workflows/prek-advisory.yml` | `prek-advisory.yml@v3` — the whole tree, non-blocking, as one updated PR comment |
+| `.github/workflows/pr-description.yml` | `actions/populate-pr-description@v3` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range |
 
 ## Scenario branches
 
