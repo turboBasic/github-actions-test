@@ -1,17 +1,17 @@
 # github-actions-test
 
 Test consumer for [`turboBasic/github-actions`][upstream]. It exists to run those workflows the way a
-real repository runs them, at the `@v3` tag consumers actually pin.
+real repository runs them, at the `@v4` tag consumers actually pin.
 
 Every linter upstream passes on a workflow that no caller can run, so lint there proves nothing about
 whether a call site works. This repository is the caller.
 
 | Call site | What it exercises |
 | --- | --- |
-| `.github/workflows/ci.yml` | `python-ci.yml@v3` twice: once at every default, once with `lint-changed-only`, `hook-stage: pre-push`, `run-typecheck: false` and `cache-prek` |
-| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v3` — PR title and every commit in the range |
-| `.github/workflows/prek-advisory.yml` | `prek-advisory.yml@v3` — the whole tree, non-blocking, as one updated PR comment |
-| `.github/workflows/pr-description.yml` | `actions/populate-pr-description@v3` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range |
+| `.github/workflows/ci.yml` | `python-ci.yml@v4` twice: once at every default, once with `lint-changed-only`, `hook-stage: pre-push`, `run-typecheck: false` and `cache-prek` |
+| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v4` — PR title and every commit in the range |
+| `.github/workflows/prek-advisory.yml` | `prek-advisory.yml@v4` — the whole tree, non-blocking, as one updated PR comment |
+| `.github/workflows/pr-description.yml` | `actions/populate-pr-description@v4` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range |
 
 ## Scenario branches
 
@@ -38,11 +38,13 @@ the colour: which `TASK` the step received, which mise version installed, which 
 
 ## Required checks
 
-`main` carries a ruleset requiring `ci / CI`, `commits / PR title` and `commits / Commit messages` —
-the same three contexts as upstream, so the check-name composition (`<caller job> / <called job>`) is
-under test too.
+`main` carries a ruleset requiring `ci / python-ci`, `commits / pr-title` and
+`commits / commit-messages` — the same three contexts as upstream, so the check-name composition
+(`<caller job> / <called job>`) is under test too. `v4` renamed the called half of all three, and this
+repository's ruleset moved with the repin: leaving the old contexts required would block every pull
+request on a check nothing reports.
 
-`variants / CI` is deliberately **not** required. The scenario branches replace `ci.yml` with a single
+`variants / python-ci` is deliberately **not** required. The scenario branches replace `ci.yml` with a single
 job, so that context never reports there, and a required context that no job reports blocks the pull
 request forever. That is the trap `tests/test_action_pins.py` guards upstream, met here by leaving the
 context optional.
