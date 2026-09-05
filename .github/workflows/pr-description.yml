@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   describe:
-    name: Populate the PR description
+    name: pr-description
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0 # commit subjects come from the range; a shallow clone renders an empty body
           persist-credentials: false
-      - uses: turboBasic/github-actions/actions/populate-pr-description@v3
+      - uses: turboBasic/github-actions/actions/populate-pr-description@v4
         with:
           github-token: ${{ github.token }}
           pr-number: ${{ github.event.pull_request.number }}
