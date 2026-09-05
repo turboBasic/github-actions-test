@@ -1,7 +1,7 @@
 # The compensating control for ci.yml's `lint-changed-only` job: that one can pass while the
 # tree is broken, this one reads the whole tree and reports without blocking.
 
-name: Pre-commit advisory
+name: prek-advisory
 
 on:
   pull_request:
@@ -12,9 +12,10 @@ permissions:
 
 jobs:
   advisory:
-    uses: turboBasic/github-actions/.github/workflows/precommit-advisory.yml@v2
+    uses: turboBasic/github-actions/.github/workflows/prek-advisory.yml@v3
     permissions:
       contents: read
       pull-requests: write
     with:
       hook-stage: pre-push # the same value ci.yml's variants job passes, or the two disagree
+      cache-prek: true # explicit only to prove the v3 rename resolves: a stale name is a startup failure
