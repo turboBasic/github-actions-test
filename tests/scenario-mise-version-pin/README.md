@@ -18,9 +18,16 @@ chooses the tools. Pinning one without the other still drifts.
 
 ## Expected result
 
-`ci / CI` **passes**, and its mise-action step logs `2026.9.0` rather than the newest release. That
-line in the log is the assertion — a green job alone does not distinguish a forwarded input from an
-ignored one.
+`ci / python-ci` **passes**, and its mise-action step logs `2026.9.0` rather than the newest release.
+That line in the log is the assertion — a green job alone does not distinguish a forwarded input from
+an ignored one.
+
+## Observed at `@v4`
+
+PR #14 green, and `mise --version` in the mise-action step printed `2026.9.0 linux-x64 (2026-09-01)`.
+Worth knowing why that line and not the input echo: the step also logs `mise already installed`,
+because the runner image ships one, so `version: 2026.9.0` reaching the action is not by itself
+evidence that the pinned release is what ran.
 
 ## Do not merge
 
