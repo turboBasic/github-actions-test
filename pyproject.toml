@@ -30,3 +30,9 @@ name = "cz_conventional_commits"
 tag_format = "v$version"
 version_scheme = "semver"
 version_provider = "pep621"
+
+# What a consumer of this repository resolves. Read by turboBasic/github-actions' release.yml from
+# this file, since it checks out the caller's tree — so this is where *our* layout is declared rather
+# than inheriting theirs. Without it every path counts and any breaking commit refuses a non-major.
+[tool.turbobasic-release]
+surface-include = ["src/**"]
