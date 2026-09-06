@@ -11,3 +11,5 @@ two spaces before committing.
 
 `advisory / prek-advisory` reporting this finding as a pull request comment is the
 whole point of the branch.
+A second push adds this line, also ending in two spaces, so prek still fails and
+the comment has something to be updated *to*: a new run URL under the same id.  
