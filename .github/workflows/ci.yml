@@ -32,9 +32,7 @@ jobs:
   # repo, so a release that goes wrong here costs a tag nobody resolves.
   #
   # Ordinarily it does nothing. `[project].version` is already tagged, so it exits with a notice on
-  # every push. Bump that version to cut another — and bump the *major* if the range holds a `!` on
-  # anything under `.github/workflows/**`, because github-actions' consumer-surface filter is its own
-  # layout applied to ours and refuses a non-major over such a range.
+  # every push. Bump that version to cut another.
   release:
     needs: [ci]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
