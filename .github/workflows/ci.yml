@@ -28,15 +28,17 @@ jobs:
   # variant call.
   #
   # This repo is where that shape was first exercised (turboBasic/github-actions#54), which is also
-  # why it carries v0.1.0 and v0. It stays as standing coverage: nothing consumes this repo, so a
-  # release that goes wrong here costs a tag nobody resolves.
+  # why it carries real version tags of its own. It stays as standing coverage: nothing consumes this
+  # repo, so a release that goes wrong here costs a tag nobody resolves.
   #
-  # Ordinarily it does nothing. `[project].version` is 0.1.0 and already tagged, so it exits with a
-  # notice on every push. Bump that version to cut another.
+  # Ordinarily it does nothing. `[project].version` is already tagged, so it exits with a notice on
+  # every push. Bump that version to cut another — and bump the *major* if the range holds a `!` on
+  # anything under `.github/workflows/**`, because github-actions' consumer-surface filter is its own
+  # layout applied to ours and refuses a non-major over such a range.
   release:
     needs: [ci]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: turboBasic/github-actions/.github/workflows/release.yml@004-release-yml-stage-2
+    uses: turboBasic/github-actions/.github/workflows/release.yml@v4
     permissions:
       contents: write # creates the version tag, publishes the release, moves the major tag
 
