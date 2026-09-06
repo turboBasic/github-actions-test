@@ -16,11 +16,17 @@ tasks is what makes the test real.
 
 ## Expected result
 
-`ci / CI` **passes**, having run checkout, `uv sync --locked` and `mise run lint` — and nothing else.
-The Typecheck and Test steps report as skipped.
+`ci / python-ci` **passes**, having run checkout, `uv sync --locked` and `mise run lint` — and nothing
+else. The Typecheck and Test steps report as skipped.
 
 Flip either input back to its default on this branch and the job fails with a task that does not
 exist. That failure is the thing `opus-magnum` would hit without these inputs.
+
+## Observed at `@v4`
+
+PR #13 green, with the job's step conclusions reading `Lint: success`, `Typecheck: skipped`,
+`Test: skipped`. `Sync dependencies` still ran — the inputs switch off the stages, not the setup a
+repo with no test task still needs.
 
 ## Do not merge
 
