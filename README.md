@@ -32,6 +32,7 @@ only run from one.
 | [test/mise-version-pin](tests/scenario-mise-version-pin/README.md)<br>[PR #14](https://github.com/turboBasic/github-actions-test/pull/14) | `python-ci.yml`'s `mise-version`, pinned to `2026.9.0` and forwarded to `jdx/mise-action` | 🟢 but **the log line is the assertion**: the mise-action step must report `2026.9.0` rather than the newest release. A green job alone cannot tell a forwarded input from an ignored one. `opus-magnum` is the only real consumer that pins it. |
 | [test/lockfile-drift](tests/scenario-lockfile-drift/README.md)<br>[PR #15](https://github.com/turboBasic/github-actions-test/pull/15) | `python-ci.yml`'s `uv sync --locked`, with `[project].version` bumped to `0.2.0` and `uv.lock` left alone | 🔴 **On purpose**, at *Sync dependencies*, before any lint or test runs. The surprising half is that a *version* bump counts as drift when no dependency changed. `github-actions` hit this cutting v2.0.2. Do not fix. |
 | [test/checks-disabled](tests/scenario-checks-disabled/README.md)<br>[PR #16](https://github.com/turboBasic/github-actions-test/pull/16) | `conventional-commits.yml`'s `check-title: false` and `check-commits: false` | 🟢 **having checked nothing** — the most dangerous behaviour in the set. Both checks report *success without running*, because GitHub counts a skipped job as passed, and a skipped **required** check satisfies the ruleset, so the branch is `MERGEABLE` with two gates that validated nothing. Drop a check and remove its required context in the same change. |
+| [test/advisory-comment](tests/scenario-advisory-comment/README.md)<br>[PR #24](https://github.com/turboBasic/github-actions-test/pull/24) | `prek-advisory.yml` past its `if: steps.prek.outputs.failed == 'true'` gate — the warning, the summary and the find-or-update PR comment — via one trailing-whitespace violation in Markdown | 🟢 **while reporting a lint failure**, the only check in the set where green means the opposite of a passing lint. The other five reach this code in neither direction: four pass prek, and `test/lockfile-drift` dies two steps earlier with the action `skipped`. Two pushes, one comment: same id, moved `updated_at`. |
 
 A green branch proves nothing on its own, so each README names the assertion in the log rather than
 the colour: which `TASK` the step received, which mise version installed, which step failed first.
@@ -48,8 +49,11 @@ request on a check nothing reports.
 `ci.yml` replaces that file with a single job — `test/custom-task-names`, `test/mise-version-pin` and
 `test/stages-off` all do — so the context never reports there, and a required context that no job
 reports blocks the pull request forever. That is the trap `tests/test_action_pins.py` guards upstream,
-met here by leaving the context optional. The two scenarios that configure something else keep this
-file as `main` has it, so `variants / python-ci` does report on theirs.
+met here by leaving the context optional. The three scenarios that configure something else keep this
+file as `main` has it, so `variants / python-ci` does report on theirs — and on
+`test/advisory-comment` it reports **red**, which is the point of that branch rather than a fault in
+it. Leaving the context optional is what keeps that pull request mergeable-in-principle while it
+carries a deliberate lint failure.
 
 The Python here has no purpose beyond giving `python-ci.yml` something to lint, typecheck and test.
 `src/probe` is one function and `tests/` asserts it.
