@@ -16,10 +16,17 @@ this branch would catch.
 
 ## Expected result
 
-`ci / CI` **passes**, having run `mise run check`, `mise run types` and `mise run spec`.
+`ci / python-ci` **passes**, having run `mise run check`, `mise run types` and `mise run spec`.
 
 Break the pairing — rename a task in `mise.toml` and not in `ci.yml` — and it fails at whichever
 stage lost its task.
+
+## Observed at `@v4`
+
+PR #12 green, and the log is the assertion rather than the colour: the three steps ran
+`[check] $ uv run ruff check .`, `[types] $ uv run pyright` and `[spec] $ uv run pytest`. A call that
+dropped the inputs would have looked for `lint`, `typecheck` and `test`, which this branch does not
+define.
 
 ## Do not merge
 

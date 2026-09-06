@@ -44,10 +44,12 @@ the colour: which `TASK` the step received, which mise version installed, which 
 repository's ruleset moved with the repin: leaving the old contexts required would block every pull
 request on a check nothing reports.
 
-`variants / python-ci` is deliberately **not** required. The scenario branches replace `ci.yml` with a single
-job, so that context never reports there, and a required context that no job reports blocks the pull
-request forever. That is the trap `tests/test_action_pins.py` guards upstream, met here by leaving the
-context optional.
+`variants / python-ci` is deliberately **not** required. A scenario whose input combination lives in
+`ci.yml` replaces that file with a single job — `test/custom-task-names`, `test/mise-version-pin` and
+`test/stages-off` all do — so the context never reports there, and a required context that no job
+reports blocks the pull request forever. That is the trap `tests/test_action_pins.py` guards upstream,
+met here by leaving the context optional. The two scenarios that configure something else keep this
+file as `main` has it, so `variants / python-ci` does report on theirs.
 
 The Python here has no purpose beyond giving `python-ci.yml` something to lint, typecheck and test.
 `src/probe` is one function and `tests/` asserts it.
