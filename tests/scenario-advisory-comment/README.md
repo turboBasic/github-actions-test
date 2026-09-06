@@ -39,9 +39,9 @@ advisory comment is the only report of the finding. That is the arrangement the 
 
 | Check | Expected | Why |
 | --- | --- | --- |
-| `ci / python-ci` | 🟢 | `mise run lint` is ruff, which ignores trailing whitespace |
-| `variants / python-ci` | 🔴 | `lint-changed-only` runs prek over the diff, and the broken file is in it |
-| `advisory / prek-advisory` | 🟢 **while reporting the failure** | the prek step's exit code is swallowed by `set +e`, so the job succeeds and comments |
+| `ci / python-ci` | 💚 | `mise run lint` is ruff, which ignores trailing whitespace |
+| `variants / python-ci` | ❤️ | `lint-changed-only` runs prek over the diff, and the broken file is in it |
+| `advisory / prek-advisory` | 💚 **while reporting the failure** | the prek step's exit code is swallowed by `set +e`, so the job succeeds and comments |
 
 The third row is the assertion, and the colour is the wrong thing to read it by: this scenario is the
 one where a green check means the opposite of a passing lint.
