@@ -2,7 +2,7 @@
 # of the README. The second takes the caller-side configuration nothing inside github-actions can
 # exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
 
-name: ci
+name: 🌜 ci
 
 on:
   push:

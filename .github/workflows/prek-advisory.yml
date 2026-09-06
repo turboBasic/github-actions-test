@@ -1,7 +1,7 @@
 # The compensating control for ci.yml's `lint-changed-only` job: that one can pass while the
 # tree is broken, this one reads the whole tree and reports without blocking.
 
-name: prek-advisory
+name: 🌜 prek-advisory
 
 on:
   pull_request:
