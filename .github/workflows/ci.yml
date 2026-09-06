@@ -36,7 +36,7 @@ jobs:
   release:
     needs: [ci]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: turboBasic/github-actions/.github/workflows/release.yml@v4
+    uses: turboBasic/github-actions/.github/workflows/release.yml@004-release-yml-stage-2
     permissions:
       contents: write # creates the version tag, publishes the release, moves the major tag
 
