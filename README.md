@@ -75,3 +75,7 @@ mise run ci
 <!-- Links -->
 
 [upstream]: https://github.com/turboBasic/github-actions
+
+<!-- Touched by turboBasic/github-actions#110 verification: an intentionally breaking docs
+change, used to prove release.yml refuses an unfiltered range when no consumer surface is
+declared. -->
