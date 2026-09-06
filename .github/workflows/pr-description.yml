@@ -1,7 +1,7 @@
 # On `opened` only: this rewrites the body, so running it on every push would discard whatever
 # a human typed after the PR went up.
 
-name: pr-description
+name: 🌜 pr-description
 
 on:
   pull_request:
