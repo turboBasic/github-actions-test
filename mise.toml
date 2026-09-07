@@ -26,3 +26,16 @@ run = "uv run pytest"
 [tasks.ci]
 description = "Run everything CI runs, locally"
 depends = ["lint", "typecheck", "test"]
+
+# `rebase-scenarios.yml` force-pushes every `test/*` branch, so a local copy is stale the moment
+# anything lands on `main` and `git pull` on one would replay the old tip as a merge. Discarding the
+# local ref is the only correct move, which is why this hard-resets rather than pulls.
+[tasks.resync]
+description = "Reset local main and test/* branches to origin, pruning and refetching tags"
+run = [
+  "git switch main",
+  "git pull --rebase --autostash",
+  "git fetch --all --prune --verbose",
+  "git fetch --tags --force",
+  '''git for-each-ref --format='%(refname:strip=2)' 'refs/heads/test/*' | while read -r b; do git branch -f "$b" "origin/$b" && echo "reset $b" || echo "gone from origin, left alone: $b"; done''',
+]

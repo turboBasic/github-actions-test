@@ -82,7 +82,14 @@ would look wired up while running nothing.
 ```sh
 mise run setup
 mise run ci
+mise run resync
 ```
+
+`resync` is the local half of `rebase-scenarios.yml`: because that workflow force-pushes, a local
+`test/*` branch is stale as soon as anything lands on `main`, and `git pull` on one would replay the
+discarded tip as a merge. The task switches to `main`, pulls, prunes, refetches tags, then hard-resets
+every local `test/*` ref to its origin counterpart — **discarding local commits on those branches**,
+which is the only correct treatment of a ref the remote rewrites.
 
 <!-- Links -->
 
