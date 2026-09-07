@@ -91,6 +91,11 @@ discarded tip as a merge. The task switches to `main`, pulls, prunes, refetches 
 every local `test/*` ref to its origin counterpart — **discarding local commits on those branches**,
 which is the only correct treatment of a ref the remote rewrites.
 
+It then deletes any local branch whose upstream is `[gone]`, which is what a squash merge with
+`--delete-branch` leaves behind. `[gone]` is the whole guard: a branch that was never pushed has no
+upstream, so it is never a candidate, and the deletion needs `-D` only because a squashed commit
+appears in no ancestry `-d` can see.
+
 <!-- Links -->
 
 [upstream]: https://github.com/turboBasic/github-actions
