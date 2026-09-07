@@ -1,6 +1,6 @@
 [project]
 name = "github-actions-test"
-version = "0.1.1"
+version = "0.1.2"
 description = "Test consumer for turboBasic/github-actions"
 requires-python = ">=3.14"
 dependencies = []
