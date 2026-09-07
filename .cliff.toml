@@ -44,6 +44,12 @@ body = '''
 {% endfor %}'''
 postprocessors = [
   { pattern = '<!--[0-9]+-->', replace = "" },
+  # A subject saying `repin every call site to @v4` becomes an @-mention once GitHub renders the
+  # release body: it resolves `@v4` to whoever holds that login, credits them in the release's
+  # Contributors and notifies them. Three strangers were carried that way before this line existed.
+  # Backticks make it inert and read correctly for a ref pin. Anchored on a preceding space or
+  # bracket so an email address in a body is left alone.
+  { pattern = '(?m)(^|[\s(\[])@([A-Za-z0-9][A-Za-z0-9-]*)', replace = '${1}`@${2}`' },
   # Collapsing the footer's newlines above leaves two spaces where the original had a
   # paragraph break. Squeezed here rather than in Tera, whose `replace` only takes a literal
   # and so would leave a run of three.
