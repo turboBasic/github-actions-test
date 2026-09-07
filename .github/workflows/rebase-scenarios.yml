@@ -1,0 +1,75 @@
+# The scenario branches under `test/*` are the artifacts this repository exists for, so they have to
+# keep sitting on current `main` — a scenario rebased onto a stale base exercises `@v4` against a
+# repin nobody made. This replays each one onto `main` after every merge and force-pushes it.
+#
+# A conflict is never resolved here: the rebase is aborted, the branch left exactly as it was, and the
+# job fails naming it. Several of these branches change `mise.toml` or `pyproject.toml` in ways `main`
+# must not adopt — `test/lockfile-drift` owns `[project].version` on purpose — so a conflict is a human
+# decision about which side the scenario meant, not something a runner can guess.
+#
+# The push goes out under the release App rather than `GITHUB_TOKEN`, and that is the whole reason the
+# App is here: an event caused by `GITHUB_TOKEN` never starts a workflow run, so a rebase pushed with it
+# would move all six pull requests onto a new base and re-run nothing. Adding a trigger cannot fix that
+# — the suppression is on the identity, not the event name. Pushed by an App installation token instead,
+# each branch emits a real `synchronize`, and `ci`, `prek-advisory` and `commit-messages` all run
+# untouched, against the merge commit, reporting the contexts `main`'s ruleset already requires.
+# `pr-description` stays quiet by design: it triggers on `opened` only, so a human-edited body survives.
+
+name: 🌜 rebase-scenarios
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }} # two runs rebasing the same branch would race on force-with-lease
+
+jobs:
+  rebase-scenarios:
+    name: rebase-scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # the checkout reads with this; the force-push goes out under the App token
+    steps:
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write # narrowed, not inherited: the one write this workflow performs
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # a rebase needs the merge base; also what fetches the `test/*` refs at all
+          token: ${{ steps.app-token.outputs.token }} # persisted, and what `git push` then authenticates with
+
+      - name: Rebase every test/* branch onto main
+        run: |
+          set -uo pipefail
+          # A rebase rewrites the committer of every replayed commit, so this identity ends up in the
+          # branch history. Fixed here rather than left to the App, whose `<app-name>[bot]` moves if the
+          # App is ever renamed. The author of each commit is untouched, which is the half that matters.
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          conflicted=()
+          for branch in $(git for-each-ref --format='%(refname:strip=3)' 'refs/remotes/origin/test/*'); do
+            git checkout -B "$branch" "origin/$branch"
+            if git rebase origin/main && git push --force-with-lease origin "$branch"; then
+              echo "- \`$branch\` ✅" >>"$GITHUB_STEP_SUMMARY"
+            else
+              git rebase --abort || true
+              conflicted+=("$branch")
+              echo "- \`$branch\` ❌ conflict — left untouched" >>"$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          if [ ${#conflicted[@]} -gt 0 ]; then
+            echo "::error::rebase needs a human on: ${conflicted[*]}"
+            exit 1
+          fi

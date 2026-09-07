@@ -25,6 +25,18 @@ None of them is for merging: several change `mise.toml` or a workflow in ways `m
 and one is meant to stay red. Each still carries an open pull request, because most of these workflows
 only run from one.
 
+`.github/workflows/rebase-scenarios.yml` replays every one of them onto `main` after each merge, so a
+scenario is always testing `@v4` against the base `main` actually has. A conflict aborts and fails that
+run rather than being resolved — which side a scenario meant is not a runner's call.
+
+It force-pushes under the `turbobasic-release-proposal` App, not `GITHUB_TOKEN`, because an event caused
+by `GITHUB_TOKEN` starts no workflow run: the same push made with it would move all six pull requests
+onto a new base and re-run none of their checks. That is the only reason the App reaches this
+repository — `RELEASE_APP_CLIENT_ID` and `RELEASE_APP_PRIVATE_KEY` are set here as repository secrets,
+the same pair `github-actions` holds for `release-proposal.yml`. The installation is
+`repository_selection: selected`, so adding this repository to its list is a prerequisite the secrets
+alone do not cover.
+
 | Branch | Exercises | Ends |
 | --- | --- | --- |
 | [test/custom-task-names](tests/scenario-custom-task-names/README.md)<br>[PR #12](https://github.com/turboBasic/github-actions-test/pull/12) | `python-ci.yml`'s `lint-task`, `typecheck-task` and `test-task`, with this repo's mise tasks renamed to `check`, `types` and `spec` | 💚 The override path is never taken upstream, since `github-actions` self-calls with the defaults. Rename a task without wiring the input and the job fails with `task not found`. |
