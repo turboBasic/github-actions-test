@@ -38,4 +38,9 @@ run = [
   "git fetch --all --prune --verbose",
   "git fetch --tags --force",
   '''git for-each-ref --format='%(refname:strip=2)' 'refs/heads/test/*' | while read -r b; do git branch -f "$b" "origin/$b" && echo "reset $b" || echo "gone from origin, left alone: $b"; done''',
+  # `-D`, not `-d`: every branch here reached `main` as a squash, so its commits are in no ancestry
+  # `-d` can see and it would refuse all of them. `[gone]` is the guard that makes that safe — the
+  # branch had an upstream and the remote deleted it, which is what `--delete-branch` on a merge does.
+  # A branch that was never pushed has no upstream, is therefore never `[gone]`, and is never touched.
+  '''git for-each-ref --format='%(refname:short) %(upstream:track)' refs/heads | while read -r b track; do if [ "$track" = '[gone]' ]; then git branch -D "$b"; fi; done''',
 ]
