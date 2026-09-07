@@ -4,3 +4,8 @@ def describe() -> str:
 
 def pinned_major() -> str:
     return "v2"
+
+
+def line() -> str:
+    """The compatibility line this repository is pinned to."""
+    return "v0.1"
