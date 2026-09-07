@@ -75,3 +75,9 @@ mise run ci
 <!-- Links -->
 
 [upstream]: https://github.com/turboBasic/github-actions
+
+## Versioning here
+
+This repository is deliberately at `0.x`, so it exercises the 0.x compatibility line
+in `release.yml`: the moving ref is `v0.1` rather than `v0`, a breaking change may ship
+as `0.2.0`, and no `v0` is ever published. See turboBasic/github-actions#107.
