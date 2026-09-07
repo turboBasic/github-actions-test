@@ -1,6 +1,8 @@
 # Two calls on purpose. The first takes every default, which is what a new consumer copies out
 # of the README. The second takes the caller-side configuration nothing inside github-actions can
 # exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
+#
+# Verification only — the release call lives in release-on-merge.yml.
 
 name: 🌜 ci
 
@@ -21,24 +23,6 @@ jobs:
     uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v4
     permissions:
       contents: read
-
-  # Cuts a release here the way github-actions cuts its own: a job gated on `needs: [ci]` rather
-  # than on a trigger, so the CI verdict is structural — this cannot start unless `ci / python-ci`
-  # succeeded on this exact commit. Not `needs: [ci, variants]`: a release does not wait on the caller-side
-  # variant call.
-  #
-  # This repo is where that shape was first exercised (turboBasic/github-actions#54), which is also
-  # why it carries real version tags of its own. It stays as standing coverage: nothing consumes this
-  # repo, so a release that goes wrong here costs a tag nobody resolves.
-  #
-  # Ordinarily it does nothing. `[project].version` is already tagged, so it exits with a notice on
-  # every push. Bump that version to cut another.
-  release:
-    needs: [ci]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: turboBasic/github-actions/.github/workflows/release.yml@v4
-    permissions:
-      contents: write # creates the version tag, publishes the release, moves the major tag
 
   variants:
     uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v4

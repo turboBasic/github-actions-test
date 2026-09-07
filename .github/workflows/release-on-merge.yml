@@ -1,0 +1,43 @@
+# Cuts this repository's release after a merge to `main`, and is the manual entry point for one. The
+# call lives in its own workflow rather than as a job in ci.yml so a refused or failed release
+# reddens this workflow rather than the one that answers for the code — the shape `github-actions`
+# documents, exercised here at `@v4`.
+#
+# `verify` runs python-ci a second time on the commit ci.yml has already verified. That duplication
+# is the price of a separate run: a `needs:` edge is the only verdict structurally true on the commit
+# being tagged.
+#
+# This repo carries real version tags of its own and is where the release path is exercised — nothing
+# consumes it, so a release that goes wrong here costs a tag nobody resolves. Ordinarily it does
+# nothing: `[project].version` is already tagged, so it exits with a notice on every push. Bump that
+# version to cut another.
+
+name: 🌜 release-on-merge
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Run every refusal and render the real notes, then stop before creating any tag.
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  verify:
+    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v4
+    permissions:
+      contents: read
+
+  release:
+    needs: [verify]
+    uses: turboBasic/github-actions/.github/workflows/release.yml@v4
+    with:
+      # `inputs` does not exist on the push path, so this resolves to an empty string there;
+      # `|| false` is what makes it the boolean the input's type demands.
+      dry-run: ${{ inputs.dry-run || false }}
+    permissions:
+      contents: write # creates the version tag, publishes the release, moves the major tag

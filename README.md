@@ -9,6 +9,7 @@ whether a call site works. This repository is the caller.
 | Call site | What it exercises |
 | --- | --- |
 | `.github/workflows/ci.yml` | `python-ci.yml@v4` twice: once at every default, once with `lint-changed-only`, `hook-stage: pre-push`, `run-typecheck: false` and `cache-prek` |
+| `.github/workflows/release-on-merge.yml` | `release.yml@v4` gated on a second `python-ci.yml@v4` call, plus the `workflow_dispatch` and `dry-run` path |
 | `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v4` — PR title and every commit in the range |
 | `.github/workflows/prek-advisory.yml` | `prek-advisory.yml@v4` — the whole tree, non-blocking, as one updated PR comment |
 | `.github/workflows/pr-description.yml` | `actions/populate-pr-description@v4` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range |
