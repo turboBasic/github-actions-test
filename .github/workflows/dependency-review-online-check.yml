@@ -17,3 +17,12 @@ jobs:
     permissions:
       contents: read
     uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
+
+  # Scenario 1.4: the same difference, floor raised to high — informs rather than fails while the
+  # finding stays moderate.
+  guard-high-floor:
+    permissions:
+      contents: read
+    uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
+    with:
+      fail-on-severity: high
