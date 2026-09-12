@@ -26,3 +26,9 @@ jobs:
     uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
     with:
       fail-on-severity: high
+
+  # SC-002, the other half: granting nothing at all. Expected to fail at startup, before any job
+  # exists — no log, no annotation, and no condition can skip past it.
+  guard-no-grant:
+    permissions: {}
+    uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
