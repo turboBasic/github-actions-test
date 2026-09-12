@@ -1,0 +1,16 @@
+# SC-002, the other half of the adoption-cost scenario: granting nothing at all. Kept in its own
+# file — a job under-granting a called workflow's demand fails the *whole run* at startup, with no
+# job created at all, which would otherwise take dependency-review-online-check.yml's other jobs
+# down with it.
+
+name: dependency-review-no-grant
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  guard-no-grant:
+    permissions: {}
+    uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
