@@ -1,0 +1,34 @@
+# Throwaway scenario branch, not for merging: exercises turboBasic/github-actions-new's unreleased
+# dependency-review capability against a real pull request, per that repository's
+# specs/004-dependency-review/quickstart.md "Online" section. Pinned to the feature branch because
+# nothing is tagged yet.
+
+name: dependency-review-online-check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # SC-002, adoption cost: the published default, granting only contents: read.
+  guard:
+    permissions:
+      contents: read
+    uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
+
+  # Scenario 1.4: the same difference, floor raised to high — informs rather than fails while the
+  # finding stays moderate.
+  guard-high-floor:
+    permissions:
+      contents: read
+    uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
+    with:
+      fail-on-severity: high
+
+  # SC-002, the other half: granting nothing at all. Expected to fail at startup, before any job
+  # exists — no log, no annotation, and no condition can skip past it.
+  guard-no-grant:
+    permissions: {}
+    uses: turboBasic/github-actions-new/.github/workflows/dependency-review.yml@004-dependency-review
