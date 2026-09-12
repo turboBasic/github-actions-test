@@ -3,9 +3,10 @@ name = "github-actions-test"
 version = "0.2.0"
 description = "Test consumer for turboBasic/github-actions"
 requires-python = ">=3.14"
-# Deliberately vulnerable, for turboBasic/github-actions-new#27's dependency-review capability:
-# GHSA-ccg5-9c8w-xh6v (moderate), fixed in 0.27.1. Not a real dependency of anything here.
-dependencies = ["sqladmin==0.27.0"]
+# Moved past GHSA-ccg5-9c8w-xh6v, for turboBasic/github-actions-new#27's dependency-review
+# capability: Scenario 1.2, the same pull request moved to a clean version. Not a real dependency
+# of anything here.
+dependencies = ["sqladmin>=0.27.1"]
 
 [dependency-groups]
 dev = ["pytest>=8.3", "ruff>=0.9", "pyright>=1.1.390"]
