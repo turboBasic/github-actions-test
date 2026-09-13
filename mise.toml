@@ -11,25 +11,24 @@ _.python.venv = { path = ".venv", create = true }
 description = "Install tools, dependencies and git hooks"
 run = ["mise install", "uv sync --locked", "prek install"]
 
-# Through the hook runner, not ruff directly. At `@v0.1` the whitespace hooks reached CI by two routes
-# `@v0.2` retires — `lint-changed-only` and `prek-advisory` — and `python-ci` runs this task and nothing
-# else, so a task calling only ruff would leave them checked by nothing.
-# tests/scenario-lint-task-without-prek is the branch that demonstrates that.
-[tasks.lint]
+# SCENARIO: named `check`, not `lint`. The content is `main`'s — what this branch exercises is
+# `lint-task`, so the task it points at has to be the real one or a green run proves only that the
+# input was accepted.
+[tasks.check]
 description = "Lint everything the hook runner covers"
 run = "prek run --all-files --show-diff-on-failure"
 
-[tasks.typecheck]
+[tasks.types]
 description = "Type-check with pyright"
 run = "uv run pyright"
 
-[tasks.test]
+[tasks.spec]
 description = "Run the test suite"
 run = "uv run pytest"
 
 [tasks.ci]
 description = "Run everything CI runs, locally"
-depends = ["lint", "typecheck", "test"]
+depends = ["check", "types", "spec"]
 
 # `rebase-scenarios.yml` force-pushes every `test/*` branch, so a local copy is stale the moment
 # anything lands on `main` and `git pull` on one would replay the old tip as a merge. Discarding the
