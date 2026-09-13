@@ -1,5 +1,5 @@
 # The scenario branches under `test/*` are the artifacts this repository exists for, so they have to
-# keep sitting on current `main` — a scenario rebased onto a stale base exercises `@v4` against a
+# keep sitting on current `main` — a scenario rebased onto a stale base exercises `@main` against a
 # repin nobody made. This replays each one onto `main` after every merge and force-pushes it.
 #
 # A conflict is never resolved here: the rebase is aborted, the branch left exactly as it was, and the

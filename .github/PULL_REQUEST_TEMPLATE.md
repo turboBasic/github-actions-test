@@ -1,7 +1,7 @@
 ## What changed
 
-{{ description }}
+<!-- pr-description:summary -->
 
 ## Detail
 
-{{ changes }}
+<!-- pr-description:changes -->

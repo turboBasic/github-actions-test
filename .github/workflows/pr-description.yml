@@ -1,5 +1,5 @@
-# On `opened` only: this rewrites the body, so running it on every push would discard whatever
-# a human typed after the PR went up.
+# On `opened` only, the shape the README documents. The capability renders into the body as it stands and
+# declines rather than overwriting one written without the substitution points.
 
 name: 🌜 pr-description
 
@@ -7,26 +7,9 @@ on:
   pull_request:
     types: [opened]
 
-permissions:
-  contents: read
-
 jobs:
   describe:
-    name: pr-description
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
     permissions:
       contents: read
-      pull-requests: write # the action patches the PR body
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0 # commit subjects come from the range; a shallow clone renders an empty body
-          persist-credentials: false
-      - uses: turboBasic/github-actions/actions/populate-pr-description@v4
-        with:
-          github-token: ${{ github.token }}
-          pr-number: ${{ github.event.pull_request.number }}
-          repo: ${{ github.repository }}
-          base-sha: ${{ github.event.pull_request.base.sha }}
-          head-sha: ${{ github.event.pull_request.head.sha }}
+      pull-requests: write
+    uses: turboBasic/github-actions/.github/workflows/pr-description.yml@main
