@@ -1,18 +1,18 @@
 # github-actions-test
 
 Test consumer for [`turboBasic/github-actions`][upstream]. It exists to run those workflows the way a
-real repository runs them, at the `@v4` tag consumers actually pin.
+real repository runs them, at the ref consumers actually pin.
 
 Every linter upstream passes on a workflow that no caller can run, so lint there proves nothing about
 whether a call site works. This repository is the caller.
 
 | Call site | What it exercises |
 | --- | --- |
-| `.github/workflows/ci.yml` | `python-ci.yml@v4` twice: once at every default, once with `lint-changed-only`, `hook-stage: pre-push`, `run-typecheck: false` and `cache-prek` |
-| `.github/workflows/release-on-merge.yml` | `release.yml@v4` gated on a second `python-ci.yml@v4` call, plus the `workflow_dispatch` and `dry-run` path |
-| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v4` — PR title and every commit in the range |
-| `.github/workflows/prek-advisory.yml` | `prek-advisory.yml@v4` — the whole tree, non-blocking, as one updated PR comment |
-| `.github/workflows/pr-description.yml` | `actions/populate-pr-description@v4` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range |
+| `.github/workflows/ci.yml` | `python-ci.yml@main` twice: once at every default, once with `lint-changed-only`, `hook-stage: pre-push`, `run-typecheck: false` and `cache-prek` |
+| `.github/workflows/release-on-merge.yml` | `release.yml@main` gated on a second `python-ci.yml@main` call, plus the `workflow_dispatch` and `dry-run` path |
+| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@main` — PR title and every commit in the range |
+| `.github/workflows/prek-advisory.yml` | `prek-advisory.yml@main` — the whole tree, non-blocking, as one updated PR comment |
+| `.github/workflows/pr-description.yml` | `pr-description.yml@main` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range, identifying nothing |
 
 ## Scenario branches
 
@@ -27,7 +27,7 @@ and one is meant to stay red. Each still carries an open pull request, because m
 only run from one.
 
 `.github/workflows/rebase-scenarios.yml` replays every one of them onto `main` after each merge, so a
-scenario is always testing `@v4` against the base `main` actually has. A conflict aborts and fails that
+scenario is always testing `@main` against the base `main` actually has. A conflict aborts and fails that
 run rather than being resolved — which side a scenario meant is not a runner's call.
 
 It force-pushes under the `turbobasic-release-proposal` App, not `GITHUB_TOKEN`, because an event caused
