@@ -35,14 +35,16 @@ fails, and here it stays green.
 **A skipped required check *satisfies* branch protection.** A pull request is mergeable with required
 gates that validated nothing.
 
-Re-observed at `@v4`, against the contexts `main`'s ruleset requires now. With both inputs `false`,
+Re-observed at `@v0.1`, against the contexts `main`'s ruleset requires now. With both inputs `false`,
 `commits / pr-title` and `commits / commit-messages` reported `SKIPPED`, and GitHub reported PR #16 as
 `mergeStateStatus=CLEAN, mergeable=MERGEABLE`. The control was `test/lockfile-drift`: its
 `ci / python-ci` genuinely failed and PR #15 reported `BLOCKED` — so the ruleset was enforcing on the
 same commit range, and skipped merely counted as passed.
 
-The first reading was taken before `v4`, against `commits / PR title` and `commits / Commit messages`,
-and said the same thing. The check names changed; the behaviour did not.
+Read twice before this, on two earlier lines, against `commits / PR title` and `commits / Commit
+messages` and then against the current names. The check names changed twice; the behaviour did not — and
+a consumer's ruleset naming the retired half is what blocks every one of its pull requests until edited
+by hand, which happened to `PopulationCircles2026` on this repin.
 
 ## Do not merge
 

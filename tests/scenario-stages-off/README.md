@@ -22,11 +22,11 @@ else. The Typecheck and Test steps report as skipped.
 Flip either input back to its default on this branch and the job fails with a task that does not
 exist. That failure is the thing `opus-magnum` would hit without these inputs.
 
-## Observed at `@v4`
+## Observed at `@v0.1`
 
 PR #13 green, with the job's step conclusions reading `Lint: success`, `Typecheck: skipped`,
-`Test: skipped`. `Sync dependencies` still ran — the inputs switch off the stages, not the setup a
-repo with no test task still needs.
+`Test: skipped`. `Install from the lockfile` still ran — the inputs switch off the stages, not the
+setup a repo with no test task still needs.
 
 ## Do not merge
 

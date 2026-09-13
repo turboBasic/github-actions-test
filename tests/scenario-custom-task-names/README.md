@@ -21,7 +21,7 @@ this branch would catch.
 Break the pairing — rename a task in `mise.toml` and not in `ci.yml` — and it fails at whichever
 stage lost its task.
 
-## Observed at `@v4`
+## Observed at `@v0.1`
 
 PR #12 green, and the log is the assertion rather than the colour: the three steps ran
 `[check] $ uv run ruff check .`, `[types] $ uv run pyright` and `[spec] $ uv run pytest`. A call that

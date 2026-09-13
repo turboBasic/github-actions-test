@@ -22,15 +22,15 @@ this branch is the behaviour.
 
 ## Expected result
 
-`ci / python-ci` **fails**, at *Sync dependencies*, before any lint, typecheck or test runs. The
+`ci / python-ci` **fails**, at *Install from the lockfile*, before any lint, typecheck or test runs. The
 message names the lockfile as out of date.
 
 The fix is one command — `uv lock` — and the point of the scenario is that CI says so rather than
 silently syncing to something the lockfile does not describe.
 
-## Observed at `@v4`
+## Observed at `@v0.1`
 
-PR #15 red at *Sync dependencies*, with `Lint`, `Typecheck` and `Test` all skipped, on:
+PR #15 red at *Install from the lockfile*, with `Lint`, `Typecheck` and `Test` all skipped, on:
 
 ```text
 error: The lockfile at `uv.lock` needs to be updated, but `--locked` was provided.
@@ -42,7 +42,7 @@ The pull request reports `BLOCKED`, which is what makes this branch the control 
 check counting as passed there is a fact about skipped, not about a ruleset that was off.
 
 `advisory / prek-advisory` fails here too, on its own `uv sync --locked` rather than on a lint finding
-— the check named non-blocking, failing. That is `TD-1` in `turboBasic/github-actions`'
+— the check named non-blocking, failing. That is `TD-001` in `turboBasic/github-actions`'
 technical-debt register, and this run is the evidence it cites.
 
 ## Do not merge, and do not fix

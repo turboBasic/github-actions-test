@@ -43,7 +43,7 @@ alone do not cover.
 | --- | --- | --- |
 | [test/custom-task-names](tests/scenario-custom-task-names/README.md)<br>[PR #12](https://github.com/turboBasic/github-actions-test/pull/12) | `python-ci.yml`'s `lint-task`, `typecheck-task` and `test-task`, with this repo's mise tasks renamed to `check`, `types` and `spec` | 💚 The override path is never taken upstream, since `github-actions` self-calls with the defaults. Rename a task without wiring the input and the job fails with `task not found`. |
 | [test/stages-off](tests/scenario-stages-off/README.md)<br>[PR #13](https://github.com/turboBasic/github-actions-test/pull/13) | `python-ci.yml`'s `run-typecheck: false` and `run-tests: false`, with those tasks **deleted** from `mise.toml` | 💚 Runs only checkout, `uv sync --locked` and `mise run lint`. Deleting the tasks is what makes it real — passing the inputs in a repo that *has* them proves only that the `if:` works. This is `opus-magnum`'s actual shape. |
-| [test/lockfile-drift](tests/scenario-lockfile-drift/README.md)<br>[PR #15](https://github.com/turboBasic/github-actions-test/pull/15) | `python-ci.yml`'s `uv sync --locked`, with `[project].version` bumped to `0.2.0` and `uv.lock` left alone | ❤️ **On purpose**, at *Sync dependencies*, before any lint or test runs. The surprising half is that a *version* bump counts as drift when no dependency changed. `github-actions` hit this cutting v2.0.2. Do not fix. |
+| [test/lockfile-drift](tests/scenario-lockfile-drift/README.md)<br>[PR #15](https://github.com/turboBasic/github-actions-test/pull/15) | `python-ci.yml`'s `uv sync --locked`, with `[project].version` bumped to `0.3.0` and `uv.lock` left alone | ❤️ **On purpose**, at *Install from the lockfile*, before any lint or test runs. The surprising half is that a *version* bump counts as drift when no dependency changed. `github-actions` hit this cutting v2.0.2. Do not fix. |
 | [test/checks-disabled](tests/scenario-checks-disabled/README.md)<br>[PR #16](https://github.com/turboBasic/github-actions-test/pull/16) | `conventional-commits.yml`'s `check-title: false` and `check-commits: false` | 💚 **having checked nothing** — the most dangerous behaviour in the set. Both checks report *success without running*, because GitHub counts a skipped job as passed, and a skipped **required** check satisfies the ruleset, so the branch is `MERGEABLE` with two gates that validated nothing. Drop a check and remove its required context in the same change. |
 | [test/advisory-comment](tests/scenario-advisory-comment/README.md)<br>[PR #24](https://github.com/turboBasic/github-actions-test/pull/24) | `prek-advisory.yml` past its `if: steps.prek.outputs.failed == 'true'` gate — the warning, the summary and the find-or-update PR comment — via one trailing-whitespace violation in Markdown | 💚 **while reporting a lint failure**, the only check in the set where green means the opposite of a passing lint. The pull request still ends ❤️, because `variants / python-ci` fails on the same violation — which is what its title carries. The other four reach this code in neither direction: three pass prek, and `test/lockfile-drift` dies two steps earlier with the action `skipped`. Two pushes, one comment: same id, moved `updated_at`. |
 
@@ -58,9 +58,10 @@ where one is expected to fail by design. They differ only on `test/advisory-comm
 
 `main` carries a ruleset requiring `ci / python-ci`, `commits / pr-title` and
 `commits / commit-messages` — the same three contexts as upstream, so the check-name composition
-(`<caller job> / <called job>`) is under test too. `v4` renamed the called half of all three, and this
-repository's ruleset moved with the repin: leaving the old contexts required would block every pull
-request on a check nothing reports.
+(`<caller job> / <called job>`) is under test too. The called half has been renamed twice now, and this
+repository's ruleset moved with it both times: leaving a retired context required blocks every pull
+request on a check nothing reports, and the only symptom is a check that never appears.
+`PopulationCircles2026` met exactly that on the `@v0.1` repin.
 
 `variants / python-ci` is deliberately **not** required. A scenario whose input combination lives in
 `ci.yml` replaces that file with a single job — `test/custom-task-names` and `test/stages-off` both
@@ -105,4 +106,6 @@ appears in no ancestry `-d` can see.
 
 This repository is deliberately at `0.x`, so it exercises the 0.x compatibility line
 in `release.yml`: the moving ref is `v0.1` rather than `v0`, a breaking change may ship
-as `0.2.0`, and no `v0` is ever published. See turboBasic/github-actions#107.
+as `0.2.0`, and no `v0` is ever published. The rule is
+[ADR 0002](https://github.com/turboBasic/github-actions/blob/main/docs/decisions/0002-start-the-line-at-0-1-0.md)
+and the pinning table in that repository's README.
