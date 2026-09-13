@@ -8,6 +8,10 @@ uv = "0.12.8"
 [env]
 _.python.venv = { path = ".venv", create = true }
 
+# SCENARIO: no typecheck task and no test task, which is opus-magnum's actual shape — its checks are
+# make wrappers. `ci.yml` switches both stages off; leave either at its default and the run fails
+# naming the task this repository does not define. Do not add them back.
+
 [tasks.setup]
 description = "Install tools, dependencies and git hooks"
 run = ["mise install", "mise run deps", "prek install"]
@@ -26,19 +30,9 @@ description = "Lint everything the hook runner covers"
 depends = ["deps"]
 run = "prek run --all-files --show-diff-on-failure"
 
-[tasks.typecheck]
-description = "Type-check with pyright"
-depends = ["deps"]
-run = "uv run pyright"
-
-[tasks.test]
-description = "Run the test suite"
-depends = ["deps"]
-run = "uv run pytest"
-
 [tasks.ci]
 description = "Run everything CI runs, locally"
-depends = ["lint", "typecheck", "test"]
+depends = ["lint"]
 
 # `rebase-scenarios.yml` force-pushes every `test/*` branch, so a local copy is stale the moment
 # anything lands on `main` and `git pull` on one would replay the old tip as a merge. Discarding the
