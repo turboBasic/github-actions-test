@@ -9,7 +9,7 @@
 #
 # The push goes out under the release App rather than `GITHUB_TOKEN`, and that is the whole reason the
 # App is here: an event caused by `GITHUB_TOKEN` never starts a workflow run, so a rebase pushed with it
-# would move all six pull requests onto a new base and re-run nothing. Adding a trigger cannot fix that
+# would move all five pull requests onto a new base and re-run nothing. Adding a trigger cannot fix that
 # — the suppression is on the identity, not the event name. Pushed by an App installation token instead,
 # each branch emits a real `synchronize`, and `ci`, `prek-advisory` and `commit-messages` all run
 # untouched, against the merge commit, reporting the contexts `main`'s ruleset already requires.
