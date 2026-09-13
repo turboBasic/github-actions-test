@@ -13,6 +13,7 @@ whether a call site works. This repository is the caller.
 | `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v0.1` — PR title and every commit in the range |
 | `.github/workflows/prek-advisory.yml` | `prek-advisory.yml@v0.1` — the whole tree, non-blocking, as one updated PR comment |
 | `.github/workflows/pr-description.yml` | `pr-description.yml@v0.1` — renders `.github/PULL_REQUEST_TEMPLATE.md` from the commit range, identifying nothing |
+| `.github/workflows/dependency-guard.yml` | `dependency-review.yml@v0.1` at the default severity floor — the only call to it from outside `github-actions` |
 
 ## Scenario branches
 

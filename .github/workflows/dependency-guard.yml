@@ -1,0 +1,24 @@
+# `github-actions` calls this capability with `$/`, which resolves to the repository owning the file —
+# proving the capability runs, not that the published slug resolves for anyone else. This is that caller.
+#
+# The default floor only. `fail-on-severity` is a published input no call site anywhere sets, but a second
+# call passing it here would be green whether or not the input was forwarded, since a critical advisory is
+# rare — and a check that cannot fail is worse than none. Asserting it needs a dependency with a known
+# low-severity advisory, so that the default floor reddens while a raised one does not: a shape `main`
+# must not adopt, and so a `test/*` scenario.
+name: 🌜 dependency-guard
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  guard:
+    permissions:
+      contents: read
+    uses: turboBasic/github-actions/.github/workflows/dependency-review.yml@v0.1
