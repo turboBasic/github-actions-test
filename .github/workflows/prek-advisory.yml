@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   advisory:
-    uses: turboBasic/github-actions/.github/workflows/prek-advisory.yml@main
+    uses: turboBasic/github-actions/.github/workflows/prek-advisory.yml@v0.1
     permissions:
       contents: read
       pull-requests: write

@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   commits:
-    uses: turboBasic/github-actions/.github/workflows/conventional-commits.yml@main
+    uses: turboBasic/github-actions/.github/workflows/conventional-commits.yml@v0.1
     permissions:
       contents: read
       pull-requests: read
