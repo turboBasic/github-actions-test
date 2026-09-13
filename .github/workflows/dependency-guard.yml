@@ -1,0 +1,31 @@
+# Two calls, for the same reason ci.yml makes two. `github-actions` calls this capability with `$/`,
+# which proves the capability runs but not that the published slug resolves for anyone else, and its own
+# call takes the default — so `fail-on-severity` is a published input no call site anywhere sets.
+#
+# The floor is the caller-side configuration nothing upstream can exercise: `critical` is the loosest
+# setting, and a stale forward of the input would leave the default `low` in place and redden this job on
+# a finding it was told to ignore.
+
+name: 🌜 dependency-guard
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  guard:
+    permissions:
+      contents: read
+    uses: turboBasic/github-actions/.github/workflows/dependency-review.yml@v0.1
+
+  guard-floor:
+    permissions:
+      contents: read
+    uses: turboBasic/github-actions/.github/workflows/dependency-review.yml@v0.1
+    with:
+      fail-on-severity: critical
