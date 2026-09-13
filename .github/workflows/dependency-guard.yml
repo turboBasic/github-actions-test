@@ -1,11 +1,11 @@
-# Two calls, for the same reason ci.yml makes two. `github-actions` calls this capability with `$/`,
-# which proves the capability runs but not that the published slug resolves for anyone else, and its own
-# call takes the default — so `fail-on-severity` is a published input no call site anywhere sets.
+# `github-actions` calls this capability with `$/`, which resolves to the repository owning the file —
+# proving the capability runs, not that the published slug resolves for anyone else. This is that caller.
 #
-# The floor is the caller-side configuration nothing upstream can exercise: `critical` is the loosest
-# setting, and a stale forward of the input would leave the default `low` in place and redden this job on
-# a finding it was told to ignore.
-
+# The default floor only. `fail-on-severity` is a published input no call site anywhere sets, but a second
+# call passing it here would be green whether or not the input was forwarded, since a critical advisory is
+# rare — and a check that cannot fail is worse than none. Asserting it needs a dependency with a known
+# low-severity advisory, so that the default floor reddens while a raised one does not: a shape `main`
+# must not adopt, and so a `test/*` scenario.
 name: 🌜 dependency-guard
 
 on:
@@ -22,10 +22,3 @@ jobs:
     permissions:
       contents: read
     uses: turboBasic/github-actions/.github/workflows/dependency-review.yml@v0.1
-
-  guard-floor:
-    permissions:
-      contents: read
-    uses: turboBasic/github-actions/.github/workflows/dependency-review.yml@v0.1
-    with:
-      fail-on-severity: critical
