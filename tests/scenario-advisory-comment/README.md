@@ -20,7 +20,7 @@ that fails prek while leaving `uv sync --locked` and `mise run lint` alone.
 Because until this branch existed, that half of `prek-advisory.yml` had never run at `@v4`. The other
 scenarios reach it in neither direction:
 
-- Four of them **pass** prek, so `failed` is `'false'` and all three steps no-op.
+- Three of them **pass** prek, so `failed` is `'false'` and all three steps no-op.
 - [test/lockfile-drift](../scenario-lockfile-drift/README.md) fails at *Sync dependencies*, two steps
   earlier, with the composite action reported as `skipped`. It never runs.
 
