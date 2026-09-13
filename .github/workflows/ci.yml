@@ -34,4 +34,3 @@ jobs:
       lint-changed-only: true
       hook-stage: pre-push
       run-typecheck: false
-      cache-prek: true # explicit only to prove the v3 rename resolves: a stale name is a startup failure
