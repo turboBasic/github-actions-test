@@ -1,7 +1,7 @@
 # Cuts this repository's release after a merge to `main`, and is the manual entry point for one. The
 # call lives in its own workflow rather than as a job in ci.yml so a refused or failed release
 # reddens this workflow rather than the one that answers for the code — the shape `github-actions`
-# documents, exercised here at `@main`.
+# documents, exercised here at `@v0.1`.
 #
 # `verify` runs python-ci a second time on the commit ci.yml has already verified. That duplication
 # is the price of a separate run: a `needs:` edge is the only verdict structurally true on the commit
@@ -28,13 +28,13 @@ permissions: {}
 
 jobs:
   verify:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@main
+    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.1
     permissions:
       contents: read
 
   release:
     needs: [verify]
-    uses: turboBasic/github-actions/.github/workflows/release.yml@main
+    uses: turboBasic/github-actions/.github/workflows/release.yml@v0.1
     with:
       # `inputs` does not exist on the push path, so this resolves to an empty string there;
       # `|| false` is what makes it the boolean the input's type demands.

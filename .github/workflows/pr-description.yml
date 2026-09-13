@@ -12,4 +12,4 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: turboBasic/github-actions/.github/workflows/pr-description.yml@main
+    uses: turboBasic/github-actions/.github/workflows/pr-description.yml@v0.1
