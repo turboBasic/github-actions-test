@@ -42,7 +42,7 @@ The pull request reports `BLOCKED`, which is what makes this branch the control 
 check counting as passed there is a fact about skipped, not about a ruleset that was off.
 
 `advisory / prek-advisory` fails here too, on its own `uv sync --locked` rather than on a lint finding
-— the check named non-blocking, failing. That is `TD-001` in `turboBasic/github-actions`'
+— the check named non-blocking, failing. That is `TD-002` in `turboBasic/github-actions`'
 technical-debt register, and this run is the evidence it cites.
 
 ## Do not merge, and do not fix
