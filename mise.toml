@@ -18,13 +18,14 @@ run = ["mise install", "mise run deps", "prek install"]
 description = "Install the locked dependencies"
 run = "uv sync --locked"
 
-# Through the hook runner, not ruff directly: the capability runs this task and nothing else, so a task
-# calling only ruff would leave `.pre-commit-config.yaml`'s whitespace hooks checked by nothing.
-# tests/scenario-lint-task-without-prek is the branch that demonstrates that.
+# SCENARIO: reverted to ruff alone, against `main`, which calls the hook runner here. This is the one
+# thing tests/scenario-lint-task-without-prek exercises — every check passes over a tree that
+# `.pre-commit-config.yaml` fails on, because `project-ci` runs this task and owns no linter of its own.
+# Do not fix.
 [tasks.lint]
-description = "Lint everything the hook runner covers"
+description = "Lint with ruff"
 depends = ["deps"]
-run = "prek run --all-files --show-diff-on-failure"
+run = "uv run ruff check ."
 
 [tasks.typecheck]
 description = "Type-check with pyright"
