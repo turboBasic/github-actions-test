@@ -20,17 +20,15 @@ concurrency:
 
 jobs:
   ci:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.1
+    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.2
     permissions:
       contents: read
 
   variants:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.1
+    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.2
     permissions:
       contents: read
     with:
-      # prek over changed files instead of the lint task, at the stage this repo reserves its
-      # slow hook for, with the typecheck stage switched off entirely.
-      lint-changed-only: true
-      hook-stage: pre-push
+      # The typecheck stage switched off entirely. `lint-changed-only` and `hook-stage` sat here too
+      # until `@v0.2` retired both, so this job now differs from the one above by that switch alone.
       run-typecheck: false

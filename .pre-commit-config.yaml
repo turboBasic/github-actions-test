@@ -1,6 +1,9 @@
-# Two stages on purpose: the pre-push hook is what `hook-stage: pre-push` in the
-# python-ci.yml call has to reach. Without one, that input would look wired up while
-# running nothing.
+# `mise run lint` runs this file, so this file is what `python-ci`'s lint stage judges.
+#
+# The `pre-push` hook below sits outside that: a plain `prek run` fires the pre-commit
+# stage, and `mise run test` is what reaches pytest in CI. It existed to give
+# `hook-stage: pre-push` something to reach, and stays as a local guard now that `@v0.2`
+# has retired that input.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0

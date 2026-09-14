@@ -19,7 +19,7 @@ permissions: {}
 
 jobs:
   proposal:
-    uses: turboBasic/github-actions/.github/workflows/release-proposal.yml@v0.1
+    uses: turboBasic/github-actions/.github/workflows/release-proposal.yml@v0.2
     permissions:
       contents: read # the capability checks this tree out; every write goes through the App token
     secrets:

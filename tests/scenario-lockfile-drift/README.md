@@ -41,9 +41,10 @@ The pull request reports `BLOCKED`, which is what makes this branch the control 
 [test/checks-disabled](../scenario-checks-disabled/README.md): the ruleset is enforcing, so a skipped
 check counting as passed there is a fact about skipped, not about a ruleset that was off.
 
-`advisory / prek-advisory` fails here too, on its own `uv sync --locked` rather than on a lint finding
-— the check named non-blocking, failing. That is `TD-002` in `turboBasic/github-actions`'
-technical-debt register, and this run is the evidence it cites.
+At that ref a second check failed here as well: `advisory / prek-advisory`, on its own
+`uv sync --locked` rather than on a lint finding — the check named non-blocking, failing. That was
+`TD-002` upstream, and this run was the evidence it cited. Both the capability and the debt row went at
+`@v0.2`, so the observation above is the last one that includes it.
 
 ## Do not merge, and do not fix
 
