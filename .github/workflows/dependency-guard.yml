@@ -21,4 +21,4 @@ jobs:
   guard:
     permissions:
       contents: read
-    uses: turboBasic/github-actions/.github/workflows/dependency-review.yml@v0.1
+    uses: turboBasic/github-actions/.github/workflows/dependency-review.yml@v0.2
