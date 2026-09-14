@@ -7,6 +7,11 @@
 # must not adopt — `test/lockfile-drift` owns `[project].version` on purpose — so a conflict is a human
 # decision about which side the scenario meant, not something a runner can guess.
 #
+# A push the remote refuses is not a conflict: the rebase already succeeded locally, and the App's
+# token was simply missing a permission the branch's diff needed — a workflow-file change needs
+# `workflows` on top of `contents`. The summary and the failure name each case separately, because a
+# maintainer chasing a conflict that never happened is the failure this exists to avoid.
+#
 # The push goes out under the release App rather than `GITHUB_TOKEN`, and that is the whole reason the
 # App is here: an event caused by `GITHUB_TOKEN` never starts a workflow run, so a rebase pushed with it
 # would move every pull request onto a new base and re-run nothing. Adding a trigger cannot fix that
@@ -41,6 +46,7 @@ jobs:
           client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write # narrowed, not inherited: the one write this workflow performs
+          permission-workflows: write # a rebased branch that touches .github/workflows/ needs this to push
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -57,18 +63,30 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
           conflicted=()
+          refused=()
           for branch in $(git for-each-ref --format='%(refname:strip=3)' 'refs/remotes/origin/test/*'); do
             git checkout -B "$branch" "origin/$branch"
-            if git rebase origin/main && git push --force-with-lease origin "$branch"; then
-              echo "- \`$branch\` ✅" >>"$GITHUB_STEP_SUMMARY"
-            else
-              git rebase --abort || true
+            if ! git rebase origin/main; then
+              git rebase --abort
               conflicted+=("$branch")
               echo "- \`$branch\` ❌ conflict — left untouched" >>"$GITHUB_STEP_SUMMARY"
+              continue
+            fi
+            if push_error=$(git push --force-with-lease origin "$branch" 2>&1); then
+              echo "- \`$branch\` ✅" >>"$GITHUB_STEP_SUMMARY"
+            else
+              # rebased locally, not a conflict: the remote refused the push itself (e.g. a missing token permission)
+              refused+=("$branch")
+              printf -- '- `%s` ❌ push refused — rebased, not pushed: %s\n' "$branch" "$push_error" >>"$GITHUB_STEP_SUMMARY"
             fi
           done
 
           if [ ${#conflicted[@]} -gt 0 ]; then
             echo "::error::rebase needs a human on: ${conflicted[*]}"
+          fi
+          if [ ${#refused[@]} -gt 0 ]; then
+            echo "::error::push refused on: ${refused[*]}"
+          fi
+          if [ ${#conflicted[@]} -gt 0 ] || [ ${#refused[@]} -gt 0 ]; then
             exit 1
           fi

@@ -42,6 +42,12 @@ run rather than being resolved — which side a scenario meant is not a runner's
 that pin the ref in a file of their own rather than inheriting `main`'s are the ones a repin can conflict
 with; the rest take `ci.yml` as `main` has it and follow the ref automatically.
 
+A branch whose rebase carries a change to a workflow file is a different failure: the rebase succeeds,
+and only the push is refused, for a token permission rather than a conflict. The run reports that case as
+a refused push naming the branch, not a conflict, and the App token requests `workflows` write alongside
+`contents` write so the push that started this — repinning every call site under `.github/workflows/` —
+goes through.
+
 It force-pushes under the `turbobasic-release-proposal` App, not `GITHUB_TOKEN`, because an event caused
 by `GITHUB_TOKEN` starts no workflow run: the same push made with it would move all six pull requests
 onto a new base and re-run none of their checks. `RELEASE_APP_CLIENT_ID` and `RELEASE_APP_PRIVATE_KEY`
