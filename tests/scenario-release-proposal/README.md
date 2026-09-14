@@ -4,8 +4,9 @@
 
 `release-proposal.yml@v0.1` reached across a dependency edge with a **required secret withheld**.
 
-The passing half of this capability needs no branch: `.github/workflows/propose-on-merge.yml` on `main`
-runs it on every merge, so the proposal path is under test continuously. This branch adds the one thing
+The passing half of this capability needs no branch: `.github/workflows/release-on-merge.yml`'s
+`proposal` job on `main` runs it on every merge, so the proposal path is under test continuously. This
+branch adds the one thing
 `main` must not carry — a second call site passing `app-client-id` and nothing else.
 
 ## Why it is worth a branch
