@@ -41,3 +41,18 @@ jobs:
       dry-run: ${{ inputs.dry-run || false }}
     permissions:
       contents: write # creates the version tag, publishes the release, moves the major tag
+
+  # Ordered behind release, never beside it in a workflow of its own: release-proposal reads the tag
+  # list at checkout, and a push that releases has to have finished tagging before this reads it, or
+  # the proposal computes its range against a tag that does not exist yet — upstream#50, hit here on
+  # #59's merge as `chore: release v0.3.0`, closed by hand as spurious. Never on a dispatch — that path
+  # promises nothing is created, and this writes a branch and a pull request unconditionally.
+  proposal:
+    needs: [release]
+    if: github.event_name == 'push'
+    uses: turboBasic/github-actions/.github/workflows/release-proposal.yml@v0.2
+    permissions:
+      contents: read # the capability checks this tree out; every write goes through the App token
+    secrets:
+      app-client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+      app-private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}

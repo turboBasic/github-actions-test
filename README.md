@@ -9,8 +9,7 @@ whether a call site works. This repository is the caller.
 | Call site | What it exercises |
 | --- | --- |
 | `.github/workflows/ci.yml` | `python-ci.yml@v0.2` twice: once at every default, once with `run-typecheck: false` |
-| `.github/workflows/release-on-merge.yml` | `release.yml@v0.2` gated on a second `python-ci.yml@v0.2` call, plus the `workflow_dispatch` and `dry-run` path |
-| `.github/workflows/propose-on-merge.yml` | `release-proposal.yml@v0.2` — works out the next version from the range and opens the pull request whose merge `release-on-merge.yml` then releases, with the App credentials passed as declared secrets |
+| `.github/workflows/release-on-merge.yml` | `release.yml@v0.2` gated on a second `python-ci.yml@v0.2` call, plus the `workflow_dispatch` and `dry-run` path, and — ordered behind `release`, never beside it — `release-proposal.yml@v0.2`: works out the next version from the range and opens the pull request whose merge this workflow then releases, with the App credentials passed as declared secrets |
 | `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v0.2` — PR title and every commit in the range |
 | `.github/workflows/dependency-guard.yml` | `dependency-review.yml@v0.2` at the default severity floor — the only call to it from outside `github-actions` |
 
@@ -47,8 +46,9 @@ It force-pushes under the `turbobasic-release-proposal` App, not `GITHUB_TOKEN`,
 by `GITHUB_TOKEN` starts no workflow run: the same push made with it would move all six pull requests
 onto a new base and re-run none of their checks. `RELEASE_APP_CLIENT_ID` and `RELEASE_APP_PRIVATE_KEY`
 are set here as repository secrets, the same pair `github-actions` holds, and this is one of the App's
-two uses here — `propose-on-merge.yml` passes the same credentials to `release-proposal.yml` as declared
-secrets. The installation is `repository_selection: selected`, so adding this repository to its list is a
+two uses here — `release-on-merge.yml`'s `proposal` job passes the same credentials to
+`release-proposal.yml` as declared secrets. The installation is `repository_selection: selected`, so
+adding this repository to its list is a
 prerequisite the secrets alone do not cover.
 
 | Branch | Exercises | Ends |
@@ -59,7 +59,7 @@ prerequisite the secrets alone do not cover.
 | [test/checks-disabled](tests/scenario-checks-disabled/README.md)<br>[PR #16](https://github.com/turboBasic/github-actions-test/pull/16) | `conventional-commits.yml`'s `check-title: false` and `check-commits: false` | 💚 **having checked nothing** — the most dangerous behaviour in the set. Both checks report *success without running*, because GitHub counts a skipped job as passed, and a skipped **required** check satisfies the ruleset, so the branch is `MERGEABLE` with two gates that validated nothing. Drop a check and remove its required context in the same change. |
 | [test/lint-task-absorbs-prek](tests/scenario-lint-task-absorbs-prek/README.md)<br>[PR #57](https://github.com/turboBasic/github-actions-test/pull/57) | `python-ci.yml`'s lint stage once the changed-files bypass is retired: it delegates to `mise run lint` unconditionally, and here that task is `prek run --all-files --show-diff-on-failure` over one planted trailing-whitespace violation | ❤️ **On purpose.** The finding reddens the required check, which at `@v0.1` it could not: the lint task was ruff, and the two routes that did carry it — `lint-changed-only` and `advisory / prek-advisory` — were the diff and an advisory comment. The log is the assertion: `trim trailing whitespace…Failed` naming the file, with the diff that fixes it. |
 | [test/lint-task-without-prek](tests/scenario-lint-task-without-prek/README.md)<br>[PR #58](https://github.com/turboBasic/github-actions-test/pull/58) | the same ref, the same violation byte for byte, and `mise.toml`'s lint task left as `uv run ruff check .` — the obligation `@v0.2` hands a consumer, declined | 💚 **and green is the finding.** Every check passes over a tree the hook runner fails on, and nothing in the run mentions it. `python-ci` owns no linter, so a lint task that does not call prek means nothing in CI does. The assertion is an absence: `uv run ruff check .`, `All checks passed`, and no hook runner anywhere in the job. |
-| [test/release-proposal](tests/scenario-release-proposal/README.md)<br>[PR #54](https://github.com/turboBasic/github-actions-test/pull/54) | `release-proposal.yml`'s declared secrets, by withholding `app-private-key` from a second call site. The passing half needs no branch — `propose-on-merge.yml` on `main` runs it on every merge | ❤️ `startup_failure` **with no job at all**, the assertion being the emptiness rather than the colour. GitHub refuses a caller that omits a required secret before the workflow runs, so nothing logs, nothing annotates, and no context is composed. It is the whole argument for declaring the secrets instead of `secrets: inherit`, where a missing one would surface later as an empty key. |
+| [test/release-proposal](tests/scenario-release-proposal/README.md)<br>[PR #54](https://github.com/turboBasic/github-actions-test/pull/54) | `release-proposal.yml`'s declared secrets, by withholding `app-private-key` from a second call site. The passing half needs no branch — `release-on-merge.yml`'s `proposal` job on `main` runs it on every merge | ❤️ `startup_failure` **with no job at all**, the assertion being the emptiness rather than the colour. GitHub refuses a caller that omits a required secret before the workflow runs, so nothing logs, nothing annotates, and no context is composed. It is the whole argument for declaring the secrets instead of `secrets: inherit`, where a missing one would surface later as an empty key. |
 
 A green branch proves nothing on its own, so each README names the assertion in the log rather than
 the colour: which `TASK` the step received, which mise version installed, which step failed first.
