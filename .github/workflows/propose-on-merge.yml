@@ -1,0 +1,28 @@
+# Proposes this repository's next version, and is where `release-proposal` is exercised the way a
+# consumer reaches it.
+#
+# Two things here are temporary and belong to this branch only: the trigger is scoped to
+# `test/release-proposal` rather than `main`, and the ref is a feature branch rather than `@v0.1`. A
+# brand-new workflow cannot be dispatched — GitHub offers `workflow_dispatch` only for a file already on
+# the default branch — so a branch-scoped push is the only way to reach it before the capability ships.
+
+name: 🌜 propose-on-merge
+
+on:
+  push:
+    branches: [test/release-proposal]
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  proposal:
+    uses: turboBasic/github-actions/.github/workflows/release-proposal.yml@feat/publish-release-proposal-as-a-callable-capability
+    permissions:
+      contents: read # the capability checks this tree out; every write goes through the App token
+    secrets:
+      app-client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+      app-private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
