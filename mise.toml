@@ -11,13 +11,13 @@ _.python.venv = { path = ".venv", create = true }
 description = "Install tools, dependencies and git hooks"
 run = ["mise install", "uv sync --locked", "prek install"]
 
-# Through the hook runner, not ruff directly. At `@v0.1` the whitespace hooks reached CI by two routes
-# `@v0.2` retires — `lint-changed-only` and `prek-advisory` — and `python-ci` runs this task and nothing
-# else, so a task calling only ruff would leave them checked by nothing.
-# tests/scenario-lint-task-without-prek is the branch that demonstrates that.
+# SCENARIO: reverted to ruff alone, against `main`, which calls the hook runner here. This is the one
+# thing tests/scenario-lint-task-without-prek exercises — every check passes over a tree that
+# `.pre-commit-config.yaml` fails on, because `python-ci` runs this task and owns no linter of its own.
+# Do not fix.
 [tasks.lint]
-description = "Lint everything the hook runner covers"
-run = "prek run --all-files --show-diff-on-failure"
+description = "Lint with ruff"
+run = "uv run ruff check ."
 
 [tasks.typecheck]
 description = "Type-check with pyright"
