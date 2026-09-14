@@ -1,0 +1,27 @@
+# Proposes this repository's next version after a merge. Merging the pull request it opens is what
+# releases — `release-on-merge.yml` beside it only tags what the manifest already declares.
+#
+# The App secrets are this repository's to name; `release-proposal.yml` declares them as
+# `app-client-id` and `app-private-key`, and withholding either refuses the run before any job exists.
+# `test/release-proposal` is the branch that demonstrates that half.
+
+name: 🌜 propose-on-merge
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  proposal:
+    uses: turboBasic/github-actions/.github/workflows/release-proposal.yml@v0.1
+    permissions:
+      contents: read # the capability checks this tree out; every write goes through the App token
+    secrets:
+      app-client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+      app-private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
