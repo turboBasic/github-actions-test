@@ -23,7 +23,7 @@ jobs:
   #
   # This component is the repository root, so the default `working-directory` is under test here too.
   python:
-    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
     permissions:
       contents: read
     with:
@@ -31,14 +31,14 @@ jobs:
 
   # All four stages on: the build stage is the half of the contract the root component cannot exercise.
   go:
-    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
     permissions:
       contents: read
     with:
       working-directory: go
 
   python-no-typecheck:
-    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
     permissions:
       contents: read
     with:
