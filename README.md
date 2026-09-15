@@ -34,7 +34,7 @@ what that looks like.
 `ci.yml` on this branch pins `@002-project-ci` rather than a release: `project-ci` retires `python-ci`
 and is not on a moving ref until `0.3.0` ships. The scenario branches below still pin `@v0.2` and still
 describe it correctly — they migrate when `main` does, and `main`'s ruleset moves from
-`ci / python-ci` to `ci / project-ci` in that same change and not before.
+`ci / python-ci` to `python / project-ci` in that same change and not before.
 
 | | Python — the root | Go — `go/` |
 | --- | --- | --- |
@@ -112,13 +112,19 @@ and so cannot show in a summary.
 
 ## Required checks
 
-**On this branch `ci.yml` composes `ci / project-ci`, `go / project-ci` and `variants / project-ci`, and
-none of the three is required yet.** `main` is still a `@v0.2` caller, so the ruleset still requires
-`ci / python-ci` — a context nothing on this branch reports, leaving its pull request with one required
-check waiting for a report that will never arrive. That is the trap the paragraph below describes,
-entered on purpose and left visible: flipping the ruleset before `main` migrates would strand all six
-scenario pull requests, which pin `@v0.2` and compose the old name. `go / project-ci` stays optional
-afterwards for the reason `variants` does — a scenario replacing `ci.yml` composes neither.
+**Every job id names the component it judges**, because one capability judges all of them: the called
+half is `project-ci` in every context here, so the id is the only thing saying which component reported.
+`python-no-typecheck` is that same component under one switch, named for the component and what it
+varies rather than for being a variant of something unstated.
+
+**On this branch `ci.yml` composes `python / project-ci`, `go / project-ci` and
+`python-no-typecheck / project-ci`, and none of the three is required yet.** `main` is still a `@v0.2`
+caller, so the ruleset still requires `ci / python-ci` — a context nothing on this branch reports,
+leaving its pull request with one required check waiting for a report that will never arrive. That is the
+trap the paragraph below describes, entered on purpose and left visible: flipping the ruleset before
+`main` migrates would strand all six scenario pull requests, which pin `@v0.2` and compose the old name.
+`go / project-ci` stays optional afterwards for the reason the variant job does — a scenario that
+replaces `ci.yml` composes neither.
 
 `main` carries a ruleset requiring `ci / python-ci`, `commits / pr-title` and
 `commits / commit-messages` — the same three contexts as upstream, so the check-name composition

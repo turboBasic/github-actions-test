@@ -20,10 +20,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Each job id names the component it judges, because the called half of every context is `project-ci`
+  # for all of them: the id is the only thing that says which component a check read. The third is that
+  # same component again under one switch, so it is named for the component and what it varies.
+  #
   # The Python component is this repository's root, so no working-directory is passed and the default
   # `.` is under test as well. Nothing is published from here and there is no build backend, so the
   # build stage is switched off at the call site rather than answered by a task that only exits zero.
-  ci:
+  python:
     uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
     permissions:
       contents: read
@@ -39,11 +43,11 @@ jobs:
     with:
       working-directory: go
 
-  variants:
+  python-no-typecheck:
     uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
     permissions:
       contents: read
     with:
       run-build: false
-      # The typecheck stage switched off entirely, so this job differs from `ci` by that switch alone.
+      # The typecheck stage switched off entirely, so this job differs from `python` by that alone.
       run-typecheck: false
