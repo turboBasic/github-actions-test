@@ -1,22 +1,15 @@
-# The Go component's half of the contract. `project-ci` runs its stages in this directory, so these
-# four names are the ones it reaches — all four defined here rather than inherited, because a name this
-# file leaves out resolves to the repository root's task and would judge the Python component instead.
-#
-# No [tools] table: tools are installed once at the repository root, before any stage runs, so `go` is
-# pinned there alongside `python` and `uv`.
+# All four contract names, none inherited: a name this file leaves out resolves to the repository root's
+# task, and the Go component's check would report on the Python one. Tools are pinned at the root, where
+# they are installed.
 
 [tasks.deps]
 description = "Download, authenticate and check the module graph"
 run = [
   "go mod download",
   "go mod verify",
-  # `-diff` rather than a plain `go mod tidy`: CI reports the untidy graph instead of rewriting the
-  # checkout and reporting on a tree the maintainer does not have.
-  "go mod tidy -diff",
+  "go mod tidy -diff", # `-diff`, so CI reports an untidy graph rather than rewriting the checkout
 ]
 
-# Every stage depends on it rather than on a step inside `project-ci`: the capability invokes a task and
-# nothing else, so a task is where its own preparation belongs.
 [tasks.lint]
 description = "Refuse anything gofmt would rewrite"
 depends = ["deps"]

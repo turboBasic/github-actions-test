@@ -12,18 +12,14 @@ _.python.venv = { path = ".venv", create = true }
 description = "Install tools, dependencies and git hooks"
 run = ["mise install", "mise run deps", "prek install"]
 
-# The Python component's dependency preparation, and every stage below depends on it. `project-ci` runs
-# a task and nothing else — it installs from no lockfile on a component's behalf — so a stage that
-# cannot judge without the dependencies installed says so here. `--locked` refuses a lockfile
-# disagreeing with the manifest rather than quietly resolving something else, which is what
-# tests/scenario-lockfile-drift demonstrates from the other side.
+# A dependency of every stage below rather than a step in `project-ci`, which prepares nothing on a
+# component's behalf. `--locked` is what tests/scenario-lockfile-drift reddens against.
 [tasks.deps]
 description = "Install the locked dependencies"
 run = "uv sync --locked"
 
-# Through the hook runner, not ruff directly. At `@v0.1` the whitespace hooks reached CI by two routes
-# `@v0.2` retires — `lint-changed-only` and `prek-advisory` — and the capability runs this task and
-# nothing else, so a task calling only ruff would leave them checked by nothing.
+# Through the hook runner, not ruff directly: the capability runs this task and nothing else, so a task
+# calling only ruff would leave `.pre-commit-config.yaml`'s whitespace hooks checked by nothing.
 # tests/scenario-lint-task-without-prek is the branch that demonstrates that.
 [tasks.lint]
 description = "Lint everything the hook runner covers"

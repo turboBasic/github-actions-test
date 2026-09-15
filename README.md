@@ -7,9 +7,8 @@ Every linter upstream passes on a workflow that no caller can run, so lint there
 whether a call site works. This repository is the caller.
 
 **Two components, and `ci.yml` calls the same capability once for each.** The Python component is the
-repository root; the Go component is `go/`. Neither is here for its own sake: each gives the capability a
-real component to judge, and between them they cover the whole fixed task contract — `lint`, `typecheck`
-and `test` at the root, and `build` as well in a component that has something to compile.
+repository root; the Go component is `go/`. Between them they cover the whole task contract, `build`
+included.
 
 | Call site | What it exercises |
 | --- | --- |
@@ -31,32 +30,27 @@ what that looks like.
 
 ## The two components
 
-`ci.yml` on this branch pins `@002-project-ci` rather than a release: `project-ci` retires `python-ci`
-and is not on a moving ref until `0.3.0` ships. The scenario branches below still pin `@v0.2` and still
-describe it correctly — they migrate when `main` does, and `main`'s ruleset moves from
-`ci / python-ci` to `python / project-ci` in that same change and not before.
+`ci.yml` on this branch pins `@002-project-ci` rather than a release: `project-ci` is not on a moving ref
+until `0.3.0` ships. The scenario branches below still pin `@v0.2` and still describe it correctly; they
+migrate when `main` does, and `main`'s ruleset moves from `ci / python-ci` to `python / project-ci` in
+that same change.
 
 | | Python — the root | Go — `go/` |
 | --- | --- | --- |
-| Task configuration | `mise.toml` | `go/mise.toml`, which overrides the root's same-named tasks |
-| Dependency | `pydantic`, pinned in `uv.lock` | `github.com/google/uuid`, pinned in `go/go.sum` |
-| `deps` | `uv sync --locked` | `go mod download`, `go mod verify`, `go mod tidy -diff` |
-| `lint` | the hook runner over the whole tree | refuses anything `gofmt` would rewrite |
-| `build` | switched off at the call site — no build backend here | `go build ./...` |
-| `typecheck` | `pyright` | `go vet ./...` |
-| `test` | `pytest` | `go test ./...` |
+| Task configuration | `mise.toml` | `go/mise.toml`, overriding the root's same-named tasks |
+| Dependency | `pydantic`, in `uv.lock` | `github.com/google/uuid`, in `go/go.sum` |
+| Stages on | build off — no build backend | all four |
 
-Three things this shape is here to demonstrate, and each is a way to get it wrong:
+Each component's four task bodies are in its own `mise.toml`. Three things the shape is here to
+demonstrate, each of them a way to get it wrong:
 
-- **Every stage depends on `deps`, in both components.** The capability installs from no lockfile and
-  verifies no module graph on a component's behalf, so a stage that cannot judge without its
-  dependencies says so in its own task. Leave that out and the stage still runs — against whatever
-  happened to be resolvable.
-- **The Go component defines all four task names itself.** A nested `mise.toml` inherits what it does
-  not override, so a component leaving one out silently gets the root's — a `go / project-ci` check
-  reporting green over the Python component, which is the one failure nobody investigates.
-- **Tools are pinned at the root, tasks per component.** `go` sits in the root `[tools]` table beside
-  `python` and `uv`, because the tool install happens once, at the root, before any stage runs.
+- **Every stage depends on `deps`.** The capability prepares nothing on a component's behalf, so a stage
+  that cannot judge without its dependencies says so itself. Leave it out and the stage still runs,
+  against whatever was resolvable.
+- **The Go component defines all four names itself.** A nested `mise.toml` inherits what it does not
+  override, so a missing name silently gets the root's, and `go / project-ci` reports on Python.
+- **Tools are pinned at the root, tasks per component**, because the tool install happens once, at the
+  root, before any stage runs.
 
 ## Scenario branches
 
@@ -112,19 +106,13 @@ and so cannot show in a summary.
 
 ## Required checks
 
-**Every job id names the component it judges**, because one capability judges all of them: the called
-half is `project-ci` in every context here, so the id is the only thing saying which component reported.
-`python-no-typecheck` is that same component under one switch, named for the component and what it
-varies rather than for being a variant of something unstated.
-
 **On this branch `ci.yml` composes `python / project-ci`, `go / project-ci` and
 `python-no-typecheck / project-ci`, and none of the three is required yet.** `main` is still a `@v0.2`
-caller, so the ruleset still requires `ci / python-ci` — a context nothing on this branch reports,
-leaving its pull request with one required check waiting for a report that will never arrive. That is the
-trap the paragraph below describes, entered on purpose and left visible: flipping the ruleset before
-`main` migrates would strand all six scenario pull requests, which pin `@v0.2` and compose the old name.
-`go / project-ci` stays optional afterwards for the reason the variant job does — a scenario that
-replaces `ci.yml` composes neither.
+caller, so the ruleset still requires `ci / python-ci`, which nothing here reports — this pull request
+therefore waits on a check that will never arrive, the trap the paragraph below describes, entered
+deliberately. Flipping the ruleset before `main` migrates would strand all six scenario pull requests,
+which pin `@v0.2` and compose the old name. `go / project-ci` stays optional afterwards for the reason
+the variant job does: a scenario that replaces `ci.yml` composes neither.
 
 `main` carries a ruleset requiring `ci / python-ci`, `commits / pr-title` and
 `commits / commit-messages` — the same three contexts as upstream, so the check-name composition
