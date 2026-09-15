@@ -1,0 +1,45 @@
+# The Go component's half of the contract. `project-ci` runs its stages in this directory, so these
+# four names are the ones it reaches — all four defined here rather than inherited, because a name this
+# file leaves out resolves to the repository root's task and would judge the Python component instead.
+#
+# No [tools] table: tools are installed once at the repository root, before any stage runs, so `go` is
+# pinned there alongside `python` and `uv`.
+
+[tasks.deps]
+description = "Download, authenticate and check the module graph"
+run = [
+  "go mod download",
+  "go mod verify",
+  # `-diff` rather than a plain `go mod tidy`: CI reports the untidy graph instead of rewriting the
+  # checkout and reporting on a tree the maintainer does not have.
+  "go mod tidy -diff",
+]
+
+# Every stage depends on it rather than on a step inside `project-ci`: the capability invokes a task and
+# nothing else, so a task is where its own preparation belongs.
+[tasks.lint]
+description = "Refuse anything gofmt would rewrite"
+depends = ["deps"]
+run = '''
+unformatted=$(gofmt -l .)
+[ -z "$unformatted" ] || { printf 'gofmt would rewrite:\n%s\n' "$unformatted"; gofmt -d .; exit 1; }
+'''
+
+[tasks.build]
+description = "Compile every package"
+depends = ["deps"]
+run = "go build ./..."
+
+[tasks.typecheck]
+description = "Static analysis over every package"
+depends = ["deps"]
+run = "go vet ./..."
+
+[tasks.test]
+description = "Run the Go test suite"
+depends = ["deps"]
+run = "go test ./..."
+
+[tasks.ci]
+description = "Run every stage this component publishes, locally"
+depends = ["lint", "build", "typecheck", "test"]

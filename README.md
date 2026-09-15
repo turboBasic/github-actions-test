@@ -6,9 +6,14 @@ real repository runs them, at `@v0.2`, the ref consumers actually pin.
 Every linter upstream passes on a workflow that no caller can run, so lint there proves nothing about
 whether a call site works. This repository is the caller.
 
+**Two components, and `ci.yml` calls the same capability once for each.** The Python component is the
+repository root; the Go component is `go/`. Neither is here for its own sake: each gives the capability a
+real component to judge, and between them they cover the whole fixed task contract — `lint`, `typecheck`
+and `test` at the root, and `build` as well in a component that has something to compile.
+
 | Call site | What it exercises |
 | --- | --- |
-| `.github/workflows/ci.yml` | `python-ci.yml@v0.2` twice: once at every default, once with `run-typecheck: false` |
+| `.github/workflows/ci.yml` | `project-ci.yml` three times: the root component at every default it can take, the `go/` component through `working-directory`, and one call with `run-typecheck: false` |
 | `.github/workflows/release-on-merge.yml` | `release.yml@v0.2` gated on a second `python-ci.yml@v0.2` call, plus the `workflow_dispatch` and `dry-run` path, and — ordered behind `release`, never beside it — `release-proposal.yml@v0.2`: works out the next version from the range and opens the pull request whose merge this workflow then releases, with the App credentials passed as declared secrets |
 | `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v0.2` — PR title and every commit in the range |
 | `.github/workflows/dependency-guard.yml` | `dependency-review.yml@v0.2` at the default severity floor — the only call to it from outside `github-actions` |
@@ -19,10 +24,39 @@ covers the tree in the blocking check, and `pr-description.yml`, retired a relea
 still resolves and still has both.
 
 `mise.toml`'s `lint` task calls the hook runner rather than ruff directly, and that is not incidental:
-`python-ci` runs the task it is given and owns no linter, so at `@v0.2` a task calling only ruff would
+the capability runs the task it is given and owns no linter, so a task calling only ruff would
 leave `.pre-commit-config.yaml`'s whitespace hooks checked by nothing in CI.
 [test/lint-task-without-prek](tests/scenario-lint-task-without-prek/README.md) is the branch that shows
 what that looks like.
+
+## The two components
+
+`ci.yml` on this branch pins `@002-project-ci` rather than a release: `project-ci` retires `python-ci`
+and is not on a moving ref until `0.3.0` ships. The scenario branches below still pin `@v0.2` and still
+describe it correctly — they migrate when `main` does, and `main`'s ruleset moves from
+`ci / python-ci` to `ci / project-ci` in that same change and not before.
+
+| | Python — the root | Go — `go/` |
+| --- | --- | --- |
+| Task configuration | `mise.toml` | `go/mise.toml`, which overrides the root's same-named tasks |
+| Dependency | `pydantic`, pinned in `uv.lock` | `github.com/google/uuid`, pinned in `go/go.sum` |
+| `deps` | `uv sync --locked` | `go mod download`, `go mod verify`, `go mod tidy -diff` |
+| `lint` | the hook runner over the whole tree | refuses anything `gofmt` would rewrite |
+| `build` | switched off at the call site — no build backend here | `go build ./...` |
+| `typecheck` | `pyright` | `go vet ./...` |
+| `test` | `pytest` | `go test ./...` |
+
+Three things this shape is here to demonstrate, and each is a way to get it wrong:
+
+- **Every stage depends on `deps`, in both components.** The capability installs from no lockfile and
+  verifies no module graph on a component's behalf, so a stage that cannot judge without its
+  dependencies says so in its own task. Leave that out and the stage still runs — against whatever
+  happened to be resolvable.
+- **The Go component defines all four task names itself.** A nested `mise.toml` inherits what it does
+  not override, so a component leaving one out silently gets the root's — a `go / project-ci` check
+  reporting green over the Python component, which is the one failure nobody investigates.
+- **Tools are pinned at the root, tasks per component.** `go` sits in the root `[tools]` table beside
+  `python` and `uv`, because the tool install happens once, at the root, before any stage runs.
 
 ## Scenario branches
 
@@ -78,6 +112,14 @@ and so cannot show in a summary.
 
 ## Required checks
 
+**On this branch `ci.yml` composes `ci / project-ci`, `go / project-ci` and `variants / project-ci`, and
+none of the three is required yet.** `main` is still a `@v0.2` caller, so the ruleset still requires
+`ci / python-ci` — a context nothing on this branch reports, leaving its pull request with one required
+check waiting for a report that will never arrive. That is the trap the paragraph below describes,
+entered on purpose and left visible: flipping the ruleset before `main` migrates would strand all six
+scenario pull requests, which pin `@v0.2` and compose the old name. `go / project-ci` stays optional
+afterwards for the reason `variants` does — a scenario replacing `ci.yml` composes neither.
+
 `main` carries a ruleset requiring `ci / python-ci`, `commits / pr-title` and
 `commits / commit-messages` — the same three contexts as upstream, so the check-name composition
 (`<caller job> / <called job>`) is under test too. The called half has been renamed twice now, and this
@@ -101,10 +143,10 @@ refused for a missing secret never reaches a job, so it produces no check run to
 read — which is why that branch's evidence is its README and its Actions tab rather than its check
 summary.
 
-The Python here has no purpose beyond giving `python-ci.yml` something to lint, typecheck and test.
-`src/probe` is one function and `tests/` asserts it.
+`.pre-commit-config.yaml` is what `mise run lint` runs, so it is what the root component's lint stage
+judges — including the Go component's files, which the whitespace hooks reach. `gofmt` is the one thing
+`go/`'s own lint task adds, so neither stage repeats the other's verdict.
 
-`.pre-commit-config.yaml` is what `mise run lint` runs, so it is what `python-ci`'s lint stage judges.
 Its `pre-push` hook is outside that — a plain `prek run` fires the pre-commit stage — and exists now as a
 local guard rather than as something for a retired `hook-stage` input to reach.
 
@@ -112,7 +154,8 @@ local guard rather than as something for a retired `hook-stage` input to reach.
 
 ```sh
 mise run setup
-mise run ci
+mise run ci              # the root component, as its call site judges it
+mise --cd go run ci      # the Go component, in the directory its call site names
 mise run resync
 ```
 

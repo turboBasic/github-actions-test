@@ -1,6 +1,7 @@
-# Two calls on purpose. The first takes every default, which is what a new consumer copies out
-# of the README. The second takes the caller-side configuration nothing inside github-actions can
-# exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
+# Three calls on purpose. The first takes every default it can, which is what a new consumer copies out
+# of the README. The second is the second component, judged on its own. The third takes the caller-side
+# configuration nothing inside github-actions can exercise: docs/ai-instructions.md says a consumer has
+# to run those at the ref it pins.
 #
 # Verification only — the release call lives in release-on-merge.yml.
 
@@ -19,16 +20,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The Python component is this repository's root, so no working-directory is passed and the default
+  # `.` is under test as well. Nothing is published from here and there is no build backend, so the
+  # build stage is switched off at the call site rather than answered by a task that only exits zero.
   ci:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.2
-    permissions:
-      contents: read
-
-  variants:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.2
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
     permissions:
       contents: read
     with:
-      # The typecheck stage switched off entirely. `lint-changed-only` and `hook-stage` sat here too
-      # until `@v0.2` retired both, so this job now differs from the one above by that switch alone.
+      run-build: false
+
+  # The Go component, judged on its own and composing its own required context. All four stages on: it
+  # is the half of the contract the Python component cannot exercise, having nothing to compile.
+  go:
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
+    permissions:
+      contents: read
+    with:
+      working-directory: go
+
+  variants:
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@002-project-ci
+    permissions:
+      contents: read
+    with:
+      run-build: false
+      # The typecheck stage switched off entirely, so this job differs from `ci` by that switch alone.
       run-typecheck: false
