@@ -1,5 +1,6 @@
 [tools]
 git-cliff = "2.13.1"
+go = "1.27.1"
 prek = "0.5.0"
 python = "3.14"
 uv = "0.12.8"
@@ -9,22 +10,30 @@ _.python.venv = { path = ".venv", create = true }
 
 [tasks.setup]
 description = "Install tools, dependencies and git hooks"
-run = ["mise install", "uv sync --locked", "prek install"]
+run = ["mise install", "mise run deps", "prek install"]
 
-# Through the hook runner, not ruff directly. At `@v0.1` the whitespace hooks reached CI by two routes
-# `@v0.2` retires — `lint-changed-only` and `prek-advisory` — and `python-ci` runs this task and nothing
-# else, so a task calling only ruff would leave them checked by nothing.
+# A dependency of every stage below rather than a step in `project-ci`, which prepares nothing on a
+# component's behalf. `--locked` is what tests/scenario-lockfile-drift reddens against.
+[tasks.deps]
+description = "Install the locked dependencies"
+run = "uv sync --locked"
+
+# Through the hook runner, not ruff directly: the capability runs this task and nothing else, so a task
+# calling only ruff would leave `.pre-commit-config.yaml`'s whitespace hooks checked by nothing.
 # tests/scenario-lint-task-without-prek is the branch that demonstrates that.
 [tasks.lint]
 description = "Lint everything the hook runner covers"
+depends = ["deps"]
 run = "prek run --all-files --show-diff-on-failure"
 
 [tasks.typecheck]
 description = "Type-check with pyright"
+depends = ["deps"]
 run = "uv run pyright"
 
 [tasks.test]
 description = "Run the test suite"
+depends = ["deps"]
 run = "uv run pytest"
 
 [tasks.ci]
