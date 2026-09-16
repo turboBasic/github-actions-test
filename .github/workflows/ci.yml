@@ -1,6 +1,5 @@
-# Two calls on purpose. The first takes every default, which is what a new consumer copies out
-# of the README. The second takes the caller-side configuration nothing inside github-actions can
-# exercise: docs/ai-instructions.md says a consumer has to run those at the ref it pins.
+# Three calls: one per component, then one carrying the caller-side configuration nothing inside
+# github-actions can exercise itself.
 #
 # Verification only — the release call lives in release-on-merge.yml.
 
@@ -19,16 +18,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.2
-    permissions:
-      contents: read
-
-  variants:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.2
+  # Each id names the component it judges: the called half is `project-ci` for all three, so the id is
+  # the only thing saying which component a check read.
+  #
+  # This component is the repository root, so the default `working-directory` is under test here too.
+  python:
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
     permissions:
       contents: read
     with:
-      # The typecheck stage switched off entirely. `lint-changed-only` and `hook-stage` sat here too
-      # until `@v0.2` retired both, so this job now differs from the one above by that switch alone.
-      run-typecheck: false
+      run-build: false # no build backend here, so there is nothing to compile
+
+  # All four stages on: the build stage is the half of the contract the root component cannot exercise.
+  go:
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
+    permissions:
+      contents: read
+    with:
+      working-directory: go
+
+  python-no-typecheck:
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
+    permissions:
+      contents: read
+    with:
+      run-build: false
+      run-typecheck: false # the only thing separating this job from `python`

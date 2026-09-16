@@ -1,28 +1,53 @@
 # github-actions-test
 
 Test consumer for [`turboBasic/github-actions`][upstream]. It exists to run those workflows the way a
-real repository runs them, at `@v0.2`, the ref consumers actually pin.
+real repository runs them, at `@v0.3`, the ref consumers actually pin.
 
 Every linter upstream passes on a workflow that no caller can run, so lint there proves nothing about
 whether a call site works. This repository is the caller.
 
+**Two components, and `ci.yml` calls the same capability once for each.** The Python component is the
+repository root; the Go component is `go/`. Between them they cover the whole task contract, `build`
+included.
+
 | Call site | What it exercises |
 | --- | --- |
-| `.github/workflows/ci.yml` | `python-ci.yml@v0.2` twice: once at every default, once with `run-typecheck: false` |
-| `.github/workflows/release-on-merge.yml` | `release.yml@v0.2` gated on a second `python-ci.yml@v0.2` call, plus the `workflow_dispatch` and `dry-run` path, and — ordered behind `release`, never beside it — `release-proposal.yml@v0.2`: works out the next version from the range and opens the pull request whose merge this workflow then releases, with the App credentials passed as declared secrets |
-| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v0.2` — PR title and every commit in the range |
-| `.github/workflows/dependency-guard.yml` | `dependency-review.yml@v0.2` at the default severity floor — the only call to it from outside `github-actions` |
+| `.github/workflows/ci.yml` | `project-ci.yml@v0.3` three times: the root component at every default it can take, the `go/` component through `working-directory`, and one call with `run-typecheck: false` |
+| `.github/workflows/release-on-merge.yml` | `release.yml@v0.3` gated on a second `project-ci.yml@v0.3` call, plus the `workflow_dispatch` and `dry-run` path, and — ordered behind `release`, never beside it — `release-proposal.yml@v0.3`: works out the next version from the range and opens the pull request whose merge this workflow then releases, with the App credentials passed as declared secrets |
+| `.github/workflows/commit-messages.yml` | `conventional-commits.yml@v0.3` — PR title and every commit in the range |
+| `.github/workflows/dependency-guard.yml` | `dependency-review.yml@v0.3` at the default severity floor — the only call to it from outside `github-actions` |
 
-Two call sites went with the repin, their capabilities having been retired upstream rather than
-changed: `prek-advisory.yml`, whose whole-tree advisory comment `@v0.2` replaces with a lint task that
-covers the tree in the blocking check, and `pr-description.yml`, retired a release earlier. `@v0.1`
-still resolves and still has both.
+One call site went with the repin to `@v0.3`, its capability having been retired upstream rather than
+changed: `python-ci.yml`, whose four fixed task names `project-ci` replaces. `@v0.1` and `@v0.2` still
+resolve and still have it, along with `prek-advisory.yml` and `pr-description.yml` before it.
 
 `mise.toml`'s `lint` task calls the hook runner rather than ruff directly, and that is not incidental:
-`python-ci` runs the task it is given and owns no linter, so at `@v0.2` a task calling only ruff would
+the capability runs the task it is given and owns no linter, so a task calling only ruff would
 leave `.pre-commit-config.yaml`'s whitespace hooks checked by nothing in CI.
 [test/lint-task-without-prek](tests/scenario-lint-task-without-prek/README.md) is the branch that shows
 what that looks like.
+
+## The two components
+
+The scenario branches below still pin `@v0.2` and still describe it correctly; they migrate on their own
+schedule, and `main`'s ruleset moves from `ci / python-ci` to `python / project-ci` with this change.
+
+| | Python — the root | Go — `go/` |
+| --- | --- | --- |
+| Task configuration | `mise.toml` | `go/mise.toml`, overriding the root's same-named tasks |
+| Dependency | `pydantic`, in `uv.lock` | `github.com/google/uuid`, in `go/go.sum` |
+| Stages on | build off — no build backend | all four |
+
+Each component's four task bodies are in its own `mise.toml`. Three things the shape is here to
+demonstrate, each of them a way to get it wrong:
+
+- **Every stage depends on `deps`.** The capability prepares nothing on a component's behalf, so a stage
+  that cannot judge without its dependencies says so itself. Leave it out and the stage still runs,
+  against whatever was resolvable.
+- **The Go component defines all four names itself.** A nested `mise.toml` inherits what it does not
+  override, so a missing name silently gets the root's, and `go / project-ci` reports on Python.
+- **Tools are pinned at the root, tasks per component**, because the tool install happens once, at the
+  root, before any stage runs.
 
 ## Scenario branches
 
@@ -37,10 +62,12 @@ and one is meant to stay red. Each still carries an open pull request, because m
 only run from one.
 
 `.github/workflows/rebase-scenarios.yml` replays every one of them onto `main` after each merge, so a
-scenario is always testing `@v0.2` against the base `main` actually has. A conflict aborts and fails that
+scenario is always testing against the base `main` actually has. A conflict aborts and fails that
 run rather than being resolved — which side a scenario meant is not a runner's call. The two branches
 that pin the ref in a file of their own rather than inheriting `main`'s are the ones a repin can conflict
-with; the rest take `ci.yml` as `main` has it and follow the ref automatically.
+with; the rest take `ci.yml` as `main` has it and follow the ref automatically — which now means `@v0.3`,
+so a scenario configuring an input `python-ci` had and `project-ci` does not fails at the call until it
+is migrated.
 
 A branch whose rebase carries a change to a workflow file is a different failure: the rebase succeeds,
 and only the push is refused, for a token permission rather than a conflict. The run reports that case as
@@ -78,33 +105,35 @@ and so cannot show in a summary.
 
 ## Required checks
 
-`main` carries a ruleset requiring `ci / python-ci`, `commits / pr-title` and
+`main` carries a ruleset requiring `python / project-ci`, `commits / pr-title` and
 `commits / commit-messages` — the same three contexts as upstream, so the check-name composition
-(`<caller job> / <called job>`) is under test too. The called half has been renamed twice now, and this
-repository's ruleset moved with it both times: leaving a retired context required blocks every pull
-request on a check nothing reports, and the only symptom is a check that never appears.
-`PopulationCircles2026` met exactly that on the `@v0.1` repin.
+(`<caller job> / <called job>`) is under test too. **Both halves have now been renamed**, the called one
+three times and the calling one once, and this repository's ruleset moved with each: leaving a retired
+context required blocks every pull request on a check nothing reports, and the only symptom is a check
+that never appears. `PopulationCircles2026` met exactly that on the `@v0.1` repin.
 
-`variants / python-ci` is deliberately **not** required. A scenario whose input combination lives in
-`ci.yml` replaces that file with a single job — `test/custom-task-names` and `test/stages-off` both
-do — so the context never reports there, and a required context that no job
+The scenario branches pin `@v0.2` and so compose `ci / python-ci`, which no longer satisfies anything
+required here. None of them is for merging, so that costs nothing until one is migrated.
+
+`go / project-ci` and `python-no-typecheck / project-ci` are deliberately **not** required. A scenario
+whose input combination lives in `ci.yml` replaces that file with a single job — `test/custom-task-names`
+and `test/stages-off` both do — so those contexts never report there, and a required context that no job
 reports blocks the pull request forever. That is the trap `tests/test_action_pins.py` guards upstream,
-met here by leaving the context optional. The scenarios that configure something else keep this
-file as `main` has it, so `variants / python-ci` does report on theirs — and on
-`test/lint-task-absorbs-prek` it reports **red**, which is the point of that branch rather than a fault
-in it. Leaving the context optional is what keeps that pull request mergeable-in-principle while it
-carries a deliberate lint failure. `ci / python-ci` is required and red there, so it is not mergeable in
-fact, which is the same footing `test/lockfile-drift` stands on.
+met here by leaving them optional. The scenarios that configure something else keep this file as `main`
+has it, so both do report on theirs — and on `test/lint-task-absorbs-prek` one reports **red**, which is
+the point of that branch rather than a fault in it. Leaving them optional is what keeps that pull request
+mergeable-in-principle while it carries a deliberate lint failure. The required context is red there too,
+so it is not mergeable in fact, which is the same footing `test/lockfile-drift` stands on.
 
 `test/release-proposal` is the one scenario whose failure composes **no context whatsoever**. A run
 refused for a missing secret never reaches a job, so it produces no check run to require, to skip or to
 read — which is why that branch's evidence is its README and its Actions tab rather than its check
 summary.
 
-The Python here has no purpose beyond giving `python-ci.yml` something to lint, typecheck and test.
-`src/probe` is one function and `tests/` asserts it.
+`.pre-commit-config.yaml` is what `mise run lint` runs, so it is what the root component's lint stage
+judges — including the Go component's files, which the whitespace hooks reach. `gofmt` is the one thing
+`go/`'s own lint task adds, so neither stage repeats the other's verdict.
 
-`.pre-commit-config.yaml` is what `mise run lint` runs, so it is what `python-ci`'s lint stage judges.
 Its `pre-push` hook is outside that — a plain `prek run` fires the pre-commit stage — and exists now as a
 local guard rather than as something for a retired `hook-stage` input to reach.
 
@@ -112,7 +141,8 @@ local guard rather than as something for a retired `hook-stage` input to reach.
 
 ```sh
 mise run setup
-mise run ci
+mise run ci              # the root component, as its call site judges it
+mise --cd go run ci      # the Go component, in the directory its call site names
 mise run resync
 ```
 

@@ -1,0 +1,38 @@
+# All four contract names, none inherited: a name this file leaves out resolves to the repository root's
+# task, and the Go component's check would report on the Python one. Tools are pinned at the root, where
+# they are installed.
+
+[tasks.deps]
+description = "Download, authenticate and check the module graph"
+run = [
+  "go mod download",
+  "go mod verify",
+  "go mod tidy -diff", # `-diff`, so CI reports an untidy graph rather than rewriting the checkout
+]
+
+[tasks.lint]
+description = "Refuse anything gofmt would rewrite"
+depends = ["deps"]
+run = '''
+unformatted=$(gofmt -l .)
+[ -z "$unformatted" ] || { printf 'gofmt would rewrite:\n%s\n' "$unformatted"; gofmt -d .; exit 1; }
+'''
+
+[tasks.build]
+description = "Compile every package"
+depends = ["deps"]
+run = "go build ./..."
+
+[tasks.typecheck]
+description = "Static analysis over every package"
+depends = ["deps"]
+run = "go vet ./..."
+
+[tasks.test]
+description = "Run the Go test suite"
+depends = ["deps"]
+run = "go test ./..."
+
+[tasks.ci]
+description = "Run every stage this component publishes, locally"
+depends = ["lint", "build", "typecheck", "test"]

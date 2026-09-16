@@ -1,11 +1,11 @@
 # Cuts this repository's release after a merge to `main`, and is the manual entry point for one. The
 # call lives in its own workflow rather than as a job in ci.yml so a refused or failed release
 # reddens this workflow rather than the one that answers for the code — the shape `github-actions`
-# documents, exercised here at `@v0.2`.
+# documents, exercised here at `@v0.3`.
 #
-# `verify` runs python-ci a second time on the commit ci.yml has already verified. That duplication
-# is the price of a separate run: a `needs:` edge is the only verdict structurally true on the commit
-# being tagged.
+# `verify` judges the root component a second time, on the commit ci.yml has already judged. That
+# duplication is the price of a separate run: a `needs:` edge is the only verdict structurally true on
+# the commit being tagged.
 #
 # This repo carries real version tags of its own and is where the release path is exercised — nothing
 # consumes it, so a release that goes wrong here costs a tag nobody resolves. Ordinarily it does
@@ -27,14 +27,18 @@ on:
 permissions: {}
 
 jobs:
+  # `verify` names its role in this pipeline rather than the component it reads: what `release` depends
+  # on is the gate. Only the root component gates the release — `go/` publishes nothing from here.
   verify:
-    uses: turboBasic/github-actions/.github/workflows/python-ci.yml@v0.2
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
     permissions:
       contents: read
+    with:
+      run-build: false
 
   release:
     needs: [verify]
-    uses: turboBasic/github-actions/.github/workflows/release.yml@v0.2
+    uses: turboBasic/github-actions/.github/workflows/release.yml@v0.3
     with:
       # `inputs` does not exist on the push path, so this resolves to an empty string there;
       # `|| false` is what makes it the boolean the input's type demands.
@@ -50,7 +54,7 @@ jobs:
   proposal:
     needs: [release]
     if: github.event_name == 'push'
-    uses: turboBasic/github-actions/.github/workflows/release-proposal.yml@v0.2
+    uses: turboBasic/github-actions/.github/workflows/release-proposal.yml@v0.3
     permissions:
       contents: read # the capability checks this tree out; every write goes through the App token
     secrets:
