@@ -1,7 +1,9 @@
-# Three calls: one per component, then one carrying the caller-side configuration nothing inside
-# github-actions can exercise itself.
+# SCENARIO: a repository with no typecheck task and no test task, which is opus-magnum's actual shape —
+# its checks are make wrappers. Both stages are switched off, so the run does lint and nothing else.
+# Leave either input at its default and the run fails naming a task this repository does not define.
 #
-# Verification only — the release call lives in release-on-merge.yml.
+# One job, not main's three, which is why `go / project-ci` and `python-no-typecheck / project-ci` are
+# not required contexts: they would never report here.
 
 name: 🌜 ci
 
@@ -18,29 +20,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Each id names the component it judges: the called half is `project-ci` for all three, so the id is
-  # the only thing saying which component a check read.
-  #
-  # This component is the repository root, so the default `working-directory` is under test here too.
   python:
     uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
     permissions:
       contents: read
     with:
-      run-build: false # no build backend here, so there is nothing to compile
-
-  # All four stages on: the build stage is the half of the contract the root component cannot exercise.
-  go:
-    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
-    permissions:
-      contents: read
-    with:
-      working-directory: go
-
-  python-no-typecheck:
-    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@v0.3
-    permissions:
-      contents: read
-    with:
       run-build: false
-      run-typecheck: false # the only thing separating this job from `python`
+      run-typecheck: false
+      run-test: false
