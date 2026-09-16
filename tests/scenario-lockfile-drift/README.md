@@ -2,50 +2,55 @@
 
 ## What it exercises
 
-`python-ci.yml`'s `uv sync --locked` step, in the failure the README warns about:
+That dependency integrity survived moving out of the capability and into the consumer's own task.
 
-> Requires a `mise.toml` with the tasks being run, and a `uv.lock` — the workflow runs
-> `uv sync --locked`, so any lockfile drift fails it, **including a project version bumped without
-> re-running `uv lock`**.
-
-This branch bumps `[project].version` from `0.1.0` to `0.2.0` and leaves `uv.lock` alone.
+This branch bumps `[project].version` to `0.9.0` and leaves `uv.lock` alone. `uv.lock` records the
+project's own version, so `uv sync --locked` refuses — even though no dependency changed.
 
 ## Why it is worth a branch
 
-That sentence in the README is a claim about behaviour, and the surprising half of it is the bracketed
-part — that a *version* bump counts as drift, when no dependency changed. It is easy to read
-`--locked` as being about dependency versions only.
+At `@v0.2` this was a step inside `python-ci`, run before any stage and switchable by nothing. At `@v0.3`
+the capability installs nothing on a component's behalf: `--locked` lives in this repository's `deps`
+task, which every stage depends on. The check is the same; the owner is not.
 
-`github-actions` hit this for real: cutting v2.0.2 required `uv lock` after `cz bump`, and skipping it
-would have failed CI in every consumer at once. `CONTRIBUTING.md` says so because of this behaviour;
-this branch is the behaviour.
+That is the interesting half. A consumer could migrate, keep its four task names, and still lose this by
+dropping `depends = ["deps"]` — and nothing would say so, the stages simply running against whatever was
+resolvable. This branch is the proof the guard still fires where it now lives.
+
+The surprising half is unchanged: a *version* bump counts as drift when no dependency moved. `--locked`
+reads easily as being about dependency versions only.
 
 ## Expected result
 
-`ci / python-ci` **fails**, at *Install from the lockfile*, before any lint, typecheck or test runs. The
-message names the lockfile as out of date.
-
-The fix is one command — `uv lock` — and the point of the scenario is that CI says so rather than
-silently syncing to something the lockfile does not describe.
-
-## Observed at `@v0.1`
-
-PR #15 red at *Install from the lockfile*, with `Lint`, `Typecheck` and `Test` all skipped, on:
+`python / project-ci` **fails**, at the Lint stage rather than at a step of the capability's own, because
+that is where `deps` runs first:
 
 ```text
 error: The lockfile at `uv.lock` needs to be updated, but `--locked` was provided.
 hint: To update the lockfile, run `uv lock`.
+[deps] ERROR task failed
 ```
 
-The pull request reports `BLOCKED`, which is what makes this branch the control for
-[test/checks-disabled](../scenario-checks-disabled/README.md): the ruleset is enforcing, so a skipped
-check counting as passed there is a fact about skipped, not about a ruleset that was off.
+`go / project-ci` stays **green** over the same tree: a different component, its own dependency graph, its
+own `deps`. Two components, two verdicts — which is the reason each gets a check name of its own.
 
-At that ref a second check failed here as well: `advisory / prek-advisory`, on its own
-`uv sync --locked` rather than on a lint finding — the check named non-blocking, failing. That was
-`TD-002` upstream, and this run was the evidence it cited. Both the capability and the debt row went at
-`@v0.2`, so the observation above is the last one that includes it.
+The fix is one command, `uv lock`, and the point is that CI says so rather than silently syncing to
+something the lockfile does not describe.
+
+## Observed at `@v0.1`
+
+PR #15 red at *Install from the lockfile* — a step name that no longer exists — with `Lint`, `Typecheck`
+and `Test` all skipped. The pull request reported `BLOCKED`, which is what makes this branch the control
+for [test/checks-disabled](../scenario-checks-disabled/README.md): the ruleset is enforcing, so a skipped
+check counting as passed there is a fact about skipping, not about a ruleset that was off.
+
+A second check failed there too — `advisory / prek-advisory`, on its own `uv sync --locked` rather than on
+a lint finding, a check named non-blocking failing. That was `TD-002` upstream and this run was its
+evidence. Both went at `@v0.2`.
 
 ## Do not merge, and do not fix
 
-This branch is meant to stay red. A green version of it would prove nothing.
+This branch is meant to stay red. A green version of it would prove nothing. `0.9.0` is deliberately far
+ahead of anything this repository will release soon, so a release landing on `main` cannot quietly erase
+the drift — which is exactly what happened to the previous version of this scenario, whose `0.3.0` bump
+`main` eventually reached.

@@ -29,8 +29,8 @@ what that looks like.
 
 ## The two components
 
-The scenario branches below still pin `@v0.2` and still describe it correctly; they migrate on their own
-schedule, and `main`'s ruleset moves from `ci / python-ci` to `python / project-ci` with this change.
+Every scenario branch below is at `@v0.3` too, and three of them were rewritten to get there rather than
+repinned: what they exercised no longer exists.
 
 | | Python — the root | Go — `go/` |
 | --- | --- | --- |
@@ -65,9 +65,12 @@ only run from one.
 scenario is always testing against the base `main` actually has. A conflict aborts and fails that
 run rather than being resolved — which side a scenario meant is not a runner's call. The two branches
 that pin the ref in a file of their own rather than inheriting `main`'s are the ones a repin can conflict
-with; the rest take `ci.yml` as `main` has it and follow the ref automatically — which now means `@v0.3`,
-so a scenario configuring an input `python-ci` had and `project-ci` does not fails at the call until it
-is migrated.
+with; the rest take `ci.yml` as `main` has it and follow the ref automatically.
+
+A replay can also erase a scenario rather than break it. `test/lockfile-drift` bumped the version to
+`0.3.0`; when `main` released that version the rebase found the change already present, dropped the commit
+as empty, and left the branch equal to `main` with nothing to fail. It is at `0.9.0` now, far enough ahead
+that no release reaches it.
 
 A branch whose rebase carries a change to a workflow file is a different failure: the rebase succeeds,
 and only the push is refused, for a token permission rather than a conflict. The run reports that case as
@@ -86,12 +89,13 @@ prerequisite the secrets alone do not cover.
 
 | Branch | Exercises | Ends |
 | --- | --- | --- |
-| [test/custom-task-names](tests/scenario-custom-task-names/README.md)<br>[PR #12](https://github.com/turboBasic/github-actions-test/pull/12) | `python-ci.yml`'s `lint-task`, `typecheck-task` and `test-task`, with this repo's mise tasks renamed to `check`, `types` and `spec` | 💚 The override path is never taken upstream, since `github-actions` self-calls with the defaults. Rename a task without wiring the input and the job fails with `task not found`. |
-| [test/stages-off](tests/scenario-stages-off/README.md)<br>[PR #13](https://github.com/turboBasic/github-actions-test/pull/13) | `python-ci.yml`'s `run-typecheck: false` and `run-tests: false`, with those tasks **deleted** from `mise.toml` | 💚 Runs only checkout, `uv sync --locked` and `mise run lint`. Deleting the tasks is what makes it real — passing the inputs in a repo that *has* them proves only that the `if:` works. This is `opus-magnum`'s actual shape. |
-| [test/lockfile-drift](tests/scenario-lockfile-drift/README.md)<br>[PR #15](https://github.com/turboBasic/github-actions-test/pull/15) | `python-ci.yml`'s `uv sync --locked`, with `[project].version` bumped to `0.3.0` and `uv.lock` left alone | ❤️ **On purpose**, at *Install from the lockfile*, before any lint or test runs. The surprising half is that a *version* bump counts as drift when no dependency changed. `github-actions` hit this cutting v2.0.2. Do not fix. |
+| [test/custom-task-names](tests/scenario-custom-task-names/README.md)<br>[PR #12](https://github.com/turboBasic/github-actions-test/pull/12) | that `project-ci.yml`'s four task names are fixed, with this repo's own kept as `check`, `types` and `spec` | ❤️ **On purpose**, at the Lint stage: `mise ERROR no task lint found`, then the list of tasks that do exist. The `*-task` inputs that made this green at `@v0.2` are gone, so this is the failure a migrating consumer meets first. Do not rename. |
+| [test/stages-off](tests/scenario-stages-off/README.md)<br>[PR #13](https://github.com/turboBasic/github-actions-test/pull/13) | `project-ci.yml`'s `run-typecheck: false` and `run-test: false`, with those tasks **deleted** from `mise.toml` | 💚 Lint is the only stage left on. Deleting the tasks is what makes it real — passing the inputs in a repo that *has* them proves only that the `if:` works. This is `opus-magnum`'s actual shape. |
+| [test/stages-all-off](tests/scenario-stages-all-off/README.md)<br>[PR #67](https://github.com/turboBasic/github-actions-test/pull/67) | `project-ci.yml`'s refusal when every stage is switched off | ❤️ **On purpose**, at the first step, before the checkout. Without the refusal this branch is green: a required check passing over a component it never read. Upstream can assert the condition; only a call site shows what it prevents. |
+| [test/lockfile-drift](tests/scenario-lockfile-drift/README.md)<br>[PR #15](https://github.com/turboBasic/github-actions-test/pull/15) | that `--locked` still guards the tree now that it is the consumer's `deps` task rather than a step of the capability's, with `[project].version` bumped to `0.9.0` and `uv.lock` left alone | ❤️ **On purpose**, inside the Lint stage, where `deps` runs first. `go / project-ci` stays green over the same tree — two components, two verdicts. The surprising half is that a *version* bump counts as drift when no dependency changed. Do not fix. |
 | [test/checks-disabled](tests/scenario-checks-disabled/README.md)<br>[PR #16](https://github.com/turboBasic/github-actions-test/pull/16) | `conventional-commits.yml`'s `check-title: false` and `check-commits: false` | 💚 **having checked nothing** — the most dangerous behaviour in the set. Both checks report *success without running*, because GitHub counts a skipped job as passed, and a skipped **required** check satisfies the ruleset, so the branch is `MERGEABLE` with two gates that validated nothing. Drop a check and remove its required context in the same change. |
-| [test/lint-task-absorbs-prek](tests/scenario-lint-task-absorbs-prek/README.md)<br>[PR #57](https://github.com/turboBasic/github-actions-test/pull/57) | `python-ci.yml`'s lint stage once the changed-files bypass is retired: it delegates to `mise run lint` unconditionally, and here that task is `prek run --all-files --show-diff-on-failure` over one planted trailing-whitespace violation | ❤️ **On purpose.** The finding reddens the required check, which at `@v0.1` it could not: the lint task was ruff, and the two routes that did carry it — `lint-changed-only` and `advisory / prek-advisory` — were the diff and an advisory comment. The log is the assertion: `trim trailing whitespace…Failed` naming the file, with the diff that fixes it. |
-| [test/lint-task-without-prek](tests/scenario-lint-task-without-prek/README.md)<br>[PR #58](https://github.com/turboBasic/github-actions-test/pull/58) | the same ref, the same violation byte for byte, and `mise.toml`'s lint task left as `uv run ruff check .` — the obligation `@v0.2` hands a consumer, declined | 💚 **and green is the finding.** Every check passes over a tree the hook runner fails on, and nothing in the run mentions it. `python-ci` owns no linter, so a lint task that does not call prek means nothing in CI does. The assertion is an absence: `uv run ruff check .`, `All checks passed`, and no hook runner anywhere in the job. |
+| [test/lint-task-absorbs-prek](tests/scenario-lint-task-absorbs-prek/README.md)<br>[PR #57](https://github.com/turboBasic/github-actions-test/pull/57) | the lint stage delegating to `mise run lint` unconditionally, where that task is `prek run --all-files --show-diff-on-failure` over one planted trailing-whitespace violation | ❤️ **On purpose.** The finding reddens the required check, which at `@v0.1` it could not: the lint task was ruff, and the two routes that did carry it — `lint-changed-only` and `advisory / prek-advisory` — were the diff and an advisory comment. The log is the assertion: `trim trailing whitespace…Failed` naming the file, with the diff that fixes it. |
+| [test/lint-task-without-prek](tests/scenario-lint-task-without-prek/README.md)<br>[PR #58](https://github.com/turboBasic/github-actions-test/pull/58) | the same ref, the same violation byte for byte, and `mise.toml`'s lint task left as `uv run ruff check .` — the obligation the capability hands a consumer, declined | 💚 **and green is the finding.** Every check passes over a tree the hook runner fails on, and nothing in the run mentions it. `project-ci` owns no linter, so a lint task that does not call prek means nothing in CI does. The assertion is an absence: `uv run ruff check .`, `All checks passed`, and no hook runner anywhere in the job. |
 | [test/release-proposal](tests/scenario-release-proposal/README.md)<br>[PR #54](https://github.com/turboBasic/github-actions-test/pull/54) | `release-proposal.yml`'s declared secrets, by withholding `app-private-key` from a second call site. The passing half needs no branch — `release-on-merge.yml`'s `proposal` job on `main` runs it on every merge | ❤️ `startup_failure` **with no job at all**, the assertion being the emptiness rather than the colour. GitHub refuses a caller that omits a required secret before the workflow runs, so nothing logs, nothing annotates, and no context is composed. It is the whole argument for declaring the secrets instead of `secrets: inherit`, where a missing one would surface later as an empty key. |
 
 A green branch proves nothing on its own, so each README names the assertion in the log rather than
@@ -112,8 +116,10 @@ three times and the calling one once, and this repository's ruleset moved with e
 context required blocks every pull request on a check nothing reports, and the only symptom is a check
 that never appears. `PopulationCircles2026` met exactly that on the `@v0.1` repin.
 
-The scenario branches pin `@v0.2` and so compose `ci / python-ci`, which no longer satisfies anything
-required here. None of them is for merging, so that costs nothing until one is migrated.
+Each scenario branch composes `python / project-ci`, because each names its calling job `python` whether
+it keeps `main`'s three jobs or replaces them with one. That is deliberate: a branch composing some other
+context would report nothing the ruleset asks for, and its pull request would wait forever on a check that
+cannot arrive.
 
 `go / project-ci` and `python-no-typecheck / project-ci` are deliberately **not** required. A scenario
 whose input combination lives in `ci.yml` replaces that file with a single job — `test/custom-task-names`
