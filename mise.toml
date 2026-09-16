@@ -18,27 +18,27 @@ run = ["mise install", "mise run deps", "prek install"]
 description = "Install the locked dependencies"
 run = "uv sync --locked"
 
-# Through the hook runner, not ruff directly: the capability runs this task and nothing else, so a task
-# calling only ruff would leave `.pre-commit-config.yaml`'s whitespace hooks checked by nothing.
-# tests/scenario-lint-task-without-prek is the branch that demonstrates that.
-[tasks.lint]
+# SCENARIO: this repository's own names — `check`, `types`, `spec` — kept rather than renamed to the
+# contract's. `project-ci` takes no input that maps one onto the other, which is the whole scenario. Do
+# not rename them back.
+[tasks.check]
 description = "Lint everything the hook runner covers"
 depends = ["deps"]
 run = "prek run --all-files --show-diff-on-failure"
 
-[tasks.typecheck]
+[tasks.types]
 description = "Type-check with pyright"
 depends = ["deps"]
 run = "uv run pyright"
 
-[tasks.test]
+[tasks.spec]
 description = "Run the test suite"
 depends = ["deps"]
 run = "uv run pytest"
 
 [tasks.ci]
 description = "Run everything CI runs, locally"
-depends = ["lint", "typecheck", "test"]
+depends = ["check", "types", "spec"]
 
 # `rebase-scenarios.yml` force-pushes every `test/*` branch, so a local copy is stale the moment
 # anything lands on `main` and `git pull` on one would replay the old tip as a merge. Discarding the
