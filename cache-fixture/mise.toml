@@ -1,0 +1,12 @@
+[tasks.deps]
+description = "Populate each dependency cache from its lockfile"
+run = [
+  "uv sync --locked",
+  "cargo fetch --locked",
+  "go mod download && go mod verify",
+  "npm ci",
+]
+
+[tasks.build]
+depends = ["deps"]
+run = "cargo build --locked && go build ."
