@@ -48,7 +48,7 @@ jobs:
 
   # Exercise every language cache against real lockfiles and dependency downloads.
   cache-fixture:
-    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@fix/consumer-cache-paths
+    uses: turboBasic/github-actions/.github/workflows/project-ci.yml@main
     permissions:
       contents: read
     with:
